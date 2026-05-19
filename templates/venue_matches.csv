@@ -1,0 +1,10 @@
+venue_id,match_id,confirmed,source
+(uuid-venue-1),(uuid-match-1),true,manual
+(uuid-venue-1),(uuid-match-5),true,manual
+(uuid-venue-1),(uuid-match-6),true,manual
+(uuid-venue-2),(uuid-match-1),true,manual
+(uuid-venue-2),(uuid-match-2),true,manual
+(uuid-venue-3),(uuid-match-2),true,manual
+(uuid-venue-3),(uuid-match-3),true,manual
+(uuid-venue-3),(uuid-match-4),true,manual
+(uuid-venue-5),(uuid-match-5),true,manual

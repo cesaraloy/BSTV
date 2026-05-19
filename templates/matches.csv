@@ -1,0 +1,7 @@
+home_team,away_team,competition,match_date,match_time,home_team_logo,away_team_logo,competition_logo,venue_city,is_featured
+Real Madrid,RCD Mallorca,LaLiga EA Sports,HOY,21:00,,,🇪🇸,Madrid,true
+Chelsea,Manchester United,Premier League,MAÑANA,21:00,,,🏴󠁧󠁢󠁥󠁮󠁧󠁿,Londres,false
+Juventus,AC Milan,Serie A,17/05,18:00,,,🇮🇹,Turín,false
+Bayern Múnich,VfL Wolfsburg,Bundesliga,17/05,15:30,,,🇩🇪,Múnich,false
+Inter de Milán,Arsenal,Champions League,20/05,21:00,,,⭐,Milán,true
+FC Barcelona,Villarreal CF,LaLiga EA Sports,19/05,21:00,,,🇪🇸,Barcelona,false

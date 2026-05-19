@@ -1,0 +1,6 @@
+name,address,city,latitude,longitude,phone,image_url,rating,reviews_count,is_open,open_until,competitions,verified
+La Esquina del Fútbol,Calle de Alcalá 123,Madrid,40.4168,-3.7038,+34911234567,,4.6,128,true,01:00,"Champions League,LaLiga",true
+Bar La Grada,Calle de Luchana 45,Madrid,40.4310,-3.7050,+34912345678,,4.4,89,true,00:30,"LaLiga,Premier League",true
+Sports Corner Madrid,Calle de Goya 78,Madrid,40.4250,-3.6800,+34913456789,,4.5,204,true,02:00,"Champions League,Premier League,LaLiga",true
+Taberna Gol Norte,Av. de Asturias 12,Madrid,40.4600,-3.6990,+34914567890,,4.2,56,false,23:30,"LaLiga",false
+Peña Madridista Centro,Calle Mayor 34,Madrid,40.4150,-3.7090,+34915678901,,4.7,312,true,01:30,"Champions League,LaLiga,Serie A",true
