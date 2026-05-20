@@ -1,22 +1,32 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ArrowLeft, Search, Check } from 'lucide-react'
 import { useApp } from '../lib/context'
-import TeamLogo from '../components/TeamLogo'
+import TeamLogo, { CompetitionLogo } from '../components/TeamLogo'
 
-const COMPETITION_FILTERS = ['Todos', 'LaLiga', 'Hypermotion', 'Champions', 'Europa', "Women's CL", 'MotoGP', 'F1']
+const COMP_ORDER = [
+  'LaLiga',
+  'LaLiga Hypermotion',
+  'Premier League',
+  'Champions League',
+  'Europa League',
+  "Women's Champions League",
+  'MotoGP',
+  'Formula 1',
+]
+
+const CHIP_LABELS: Record<string, string> = {
+  'LaLiga': 'LaLiga',
+  'LaLiga Hypermotion': 'Hypermotion',
+  'Premier League': 'Premier',
+  'Champions League': 'Champions',
+  'Europa League': 'Europa',
+  "Women's Champions League": "Women's",
+  'MotoGP': 'MotoGP',
+  'Formula 1': 'F1',
+}
 
 interface Props {
   onBack: () => void
-}
-
-const competitionKey: Record<string, string> = {
-  'LaLiga': 'LaLiga',
-  'Hypermotion': 'LaLiga Hypermotion',
-  'Champions': 'Champions League',
-  'Europa': 'Europa League',
-  "Women's CL": "Women's Champions League",
-  'MotoGP': 'MotoGP',
-  'F1': 'Formula 1',
 }
 
 export default function TeamsScreen({ onBack }: Props) {
@@ -25,12 +35,18 @@ export default function TeamsScreen({ onBack }: Props) {
   const [filter, setFilter] = useState('Todos')
   const [saved, setSaved] = useState(false)
 
-  const filtered = teams.filter(t => {
-    const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase())
-    const matchesFilter =
-      filter === 'Todos' || t.competition === (competitionKey[filter] ?? filter)
+  const filtered = useMemo(() => teams.filter(t => {
+    const matchesSearch = !search || t.name.toLowerCase().includes(search.toLowerCase())
+    const matchesFilter = filter === 'Todos' || t.competition === filter
     return matchesSearch && matchesFilter
-  })
+  }), [teams, search, filter])
+
+  const grouped = useMemo(() =>
+    COMP_ORDER
+      .map(comp => ({ comp, items: filtered.filter(t => t.competition === comp) }))
+      .filter(g => g.items.length > 0),
+    [filtered]
+  )
 
   const handleSave = () => {
     saveTeams(teams)
@@ -43,7 +59,7 @@ export default function TeamsScreen({ onBack }: Props) {
       {/* Header */}
       <div className="pt-14 px-5 pb-3 bg-brand-bg">
         <div className="flex items-center gap-3 mb-4">
-          <button onClick={onBack} className="w-9 h-9 rounded-full bg-brand-card border border-brand-border flex items-center justify-center">
+          <button onClick={onBack} className="w-9 h-9 rounded-full bg-brand-card border border-brand-border flex items-center justify-center shrink-0">
             <ArrowLeft size={18} className="text-brand-text" />
           </button>
           <h1 className="text-xl font-bold text-brand-text tracking-tight">Equipos que sigo</h1>
@@ -61,55 +77,72 @@ export default function TeamsScreen({ onBack }: Props) {
         </div>
 
         <div className="flex gap-2 overflow-x-auto chip-scroll pb-1 -mx-5 px-5">
-          {COMPETITION_FILTERS.map(f => (
+          <button
+            onClick={() => setFilter('Todos')}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+              filter === 'Todos' ? 'bg-brand-navy text-white' : 'bg-brand-card border border-brand-border text-brand-muted'
+            }`}
+          >
+            Todos
+          </button>
+          {COMP_ORDER.map(comp => (
             <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                filter === f
-                  ? 'bg-brand-navy text-white'
-                  : 'bg-brand-card border border-brand-border text-brand-muted'
+              key={comp}
+              onClick={() => setFilter(comp)}
+              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                filter === comp ? 'bg-brand-navy text-white' : 'bg-brand-card border border-brand-border text-brand-muted'
               }`}
             >
-              {f}
+              <CompetitionLogo name={comp} size={12} />
+              {CHIP_LABELS[comp]}
             </button>
           ))}
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 pb-28">
-        <div className="bg-brand-card border border-brand-border rounded-2xl overflow-hidden mt-2">
-          {filtered.map((team, i) => (
-            <div key={team.id}>
-              <button
-                onClick={() => toggleTeam(team.id)}
-                className="w-full flex items-center gap-3 px-4 py-3 active:bg-brand-border/30 transition-colors"
-              >
-                <div className="w-9 h-9 rounded-sm flex items-center justify-center shrink-0">
-                  <TeamLogo name={team.name} logoUrl={team.logo_url} size="md" />
-                </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-semibold text-brand-text">{team.name}</p>
-                  <p className="text-[11px] text-brand-muted">{team.competition} · {team.country}</p>
-                </div>
-                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                  team.enabled ? 'bg-brand-navy border-brand-blue' : 'border-brand-border'
-                }`}>
-                  {team.enabled && <Check size={13} strokeWidth={3} className="text-white" />}
-                </div>
-              </button>
-              {i < filtered.length - 1 && <div className="ml-16 border-b border-brand-border" />}
+        {grouped.length === 0 && (
+          <div className="text-center text-brand-muted text-sm py-12">No hay resultados</div>
+        )}
+
+        {grouped.map(({ comp, items }) => (
+          <div key={comp} className="mt-4">
+            {/* Competition header */}
+            <div className="flex items-center gap-2 mb-2">
+              <CompetitionLogo name={comp} size={16} />
+              <span className="text-xs font-bold text-brand-muted uppercase tracking-widest">{comp}</span>
+              <span className="text-[10px] text-brand-muted">· {items.filter(t => t.enabled).length}/{items.length}</span>
             </div>
-          ))}
-          {filtered.length === 0 && (
-            <div className="text-center text-brand-muted text-sm py-10">
-              No hay resultados
+
+            <div className="bg-brand-card border border-brand-border rounded-2xl overflow-hidden">
+              {items.map((team, i) => (
+                <div key={team.id}>
+                  <button
+                    onClick={() => toggleTeam(team.id)}
+                    className="w-full flex items-center gap-3 px-4 py-3 active:bg-brand-border/30 transition-colors"
+                  >
+                    <div className="w-9 h-9 rounded-sm flex items-center justify-center shrink-0">
+                      <TeamLogo name={team.name} logoUrl={team.logo_url} size="md" />
+                    </div>
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="text-sm font-semibold text-brand-text">{team.name}</p>
+                      <p className="text-[11px] text-brand-muted">{team.country}</p>
+                    </div>
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
+                      team.enabled ? 'bg-brand-navy border-brand-blue' : 'border-brand-border'
+                    }`}>
+                      {team.enabled && <Check size={13} strokeWidth={3} className="text-white" />}
+                    </div>
+                  </button>
+                  {i < items.length - 1 && <div className="ml-16 border-b border-brand-border" />}
+                </div>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        ))}
       </div>
 
-      <div className="absolute bottom-20 left-0 right-0 px-5 z-30">
+      <div className="absolute bottom-0 left-0 right-0 px-5 pb-6 pt-3 bg-gradient-to-t from-brand-bg via-brand-bg to-transparent z-30">
         <button
           onClick={handleSave}
           className={`w-full py-3.5 rounded-2xl font-bold text-sm text-white transition-all ${

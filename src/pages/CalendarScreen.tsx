@@ -5,28 +5,39 @@ import Logo from '../components/Logo'
 import { useApp } from '../lib/context'
 import type { Match } from '../types'
 
-const FILTERS = ['Todos', 'Hoy', 'Mañana', 'Hypermotion', 'Champions', 'Europa', "Women's CL", 'MotoGP', 'F1']
+const FILTERS = ['Todos', 'Mis equipos', 'Hoy', 'Mañana', 'LaLiga', 'Hypermotion', 'Premier', 'Champions', 'Europa', "Women's", 'MotoGP', 'F1']
+
+const FILTER_MAP: Record<string, string> = {
+  'LaLiga':     'LaLiga',
+  'Hypermotion': 'LaLiga Hypermotion',
+  'Premier':    'Premier League',
+  'Champions':  'Champions League',
+  'Europa':     'Europa League',
+  "Women's":    "Women's Champions League",
+  'MotoGP':     'MotoGP',
+  'F1':         'Formula 1',
+}
 
 interface Props {
   onMatchClick: (match: Match) => void
 }
 
 export default function CalendarScreen({ onMatchClick }: Props) {
-  const { matches, reminders, toggleReminder, loading } = useApp()
+  const { matches, reminders, toggleReminder, loading, teams } = useApp()
   const [activeFilter, setActiveFilter] = useState('Todos')
+
+  const followedNames = new Set(teams.filter(t => t.enabled).map(t => t.name))
 
   const filtered = matches.filter(m => {
     if (activeFilter === 'Todos') return true
+    if (activeFilter === 'Mis equipos') return followedNames.has(m.home_team) || followedNames.has(m.away_team)
     if (activeFilter === 'Hoy') return m.match_date === 'HOY'
     if (activeFilter === 'Mañana') return m.match_date === 'MAÑANA'
-    if (activeFilter === 'Hypermotion') return m.competition === 'LaLiga Hypermotion'
-    if (activeFilter === 'Champions') return m.competition === 'Champions League'
-    if (activeFilter === 'Europa') return m.competition === 'Europa League'
-    if (activeFilter === "Women's CL") return m.competition === "Women's Champions League"
-    if (activeFilter === 'MotoGP') return m.competition === 'MotoGP'
-    if (activeFilter === 'F1') return m.competition === 'Formula 1'
-    return true
+    const comp = FILTER_MAP[activeFilter]
+    return comp ? m.competition === comp : true
   })
+
+  const hasFollowed = followedNames.size > 0
 
   return (
     <div className="flex flex-col h-full">
@@ -41,19 +52,26 @@ export default function CalendarScreen({ onMatchClick }: Props) {
 
         {/* Filter chips */}
         <div className="flex gap-2 overflow-x-auto chip-scroll pb-1 -mx-5 px-5">
-          {FILTERS.map(f => (
-            <button
-              key={f}
-              onClick={() => setActiveFilter(f)}
-              className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                activeFilter === f
-                  ? 'bg-brand-navy text-white'
-                  : 'bg-brand-card border border-brand-border text-brand-muted'
-              }`}
-            >
-              {f}
-            </button>
-          ))}
+          {FILTERS.map(f => {
+            const isMisEquipos = f === 'Mis equipos'
+            const disabled = isMisEquipos && !hasFollowed
+            return (
+              <button
+                key={f}
+                onClick={() => !disabled && setActiveFilter(f)}
+                disabled={disabled}
+                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                  activeFilter === f
+                    ? 'bg-brand-navy text-white'
+                    : disabled
+                      ? 'bg-brand-card border border-brand-border text-brand-border cursor-not-allowed'
+                      : 'bg-brand-card border border-brand-border text-brand-muted'
+                }`}
+              >
+                {f}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -61,7 +79,7 @@ export default function CalendarScreen({ onMatchClick }: Props) {
       <div className="flex-1 overflow-y-auto px-5 pb-28">
         <div className="flex items-center justify-between mt-4 mb-3">
           <p className="text-xs font-bold text-brand-muted uppercase tracking-widest">
-            Próximos partidos
+            {activeFilter === 'Mis equipos' ? 'Mis equipos' : 'Próximos partidos'}
           </p>
           {loading && (
             <div className="flex items-center gap-1.5 text-brand-muted">
@@ -86,7 +104,9 @@ export default function CalendarScreen({ onMatchClick }: Props) {
           ))}
           {filtered.length === 0 && (
             <div className="text-center text-brand-muted text-sm py-12">
-              No hay partidos para este filtro
+              {activeFilter === 'Mis equipos'
+                ? 'Ninguno de tus equipos tiene partido próximamente'
+                : 'No hay partidos para este filtro'}
             </div>
           )}
         </div>
