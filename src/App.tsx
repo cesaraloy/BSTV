@@ -38,6 +38,7 @@ function AppInner() {
   )
   const [screen, setScreen] = useState<Screen>({ type: 'tab', tab: 'home' })
   const [activeTab, setActiveTab] = useState<Tab>('home')
+  const [mapMatchFilter, setMapMatchFilter] = useState<string | null>(null)
 
   // Restore session on mount + listen for magic link redirect
   useEffect(() => {
@@ -139,6 +140,13 @@ function AppInner() {
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab)
     setScreen({ type: 'tab', tab })
+    if (tab !== 'map') setMapMatchFilter(null)
+  }
+
+  const handleShowOnMap = (matchId: string) => {
+    setMapMatchFilter(matchId)
+    setActiveTab('map')
+    setScreen({ type: 'tab', tab: 'map' })
   }
 
   const showNav = screen.type === 'tab'
@@ -161,7 +169,10 @@ function AppInner() {
           <CalendarScreen onMatchClick={match => navigate({ type: 'match-detail', match })} />
         </div>
         <div className={isTab && screen.tab === 'map' ? '' : 'hidden'}>
-          <MapScreen onVenueClick={venue => navigate({ type: 'venue-detail', venue, from: 'map' })} />
+          <MapScreen
+            onVenueClick={venue => navigate({ type: 'venue-detail', venue, from: 'map' })}
+            matchFilter={mapMatchFilter}
+          />
         </div>
         <div className={isTab && screen.tab === 'profile' ? '' : 'hidden'}>
           <ProfileScreen
@@ -179,6 +190,7 @@ function AppInner() {
             match={screen.match}
             onBack={goBack}
             onVenueClick={venue => navigate({ type: 'venue-detail', venue, from: activeTab })}
+            onMapClick={handleShowOnMap}
           />
         )}
         {screen.type === 'venue-detail' && (

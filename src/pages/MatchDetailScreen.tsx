@@ -7,9 +7,10 @@ interface Props {
   match: Match
   onBack: () => void
   onVenueClick: (venue: Venue) => void
+  onMapClick?: (matchId: string) => void
 }
 
-export default function MatchDetailScreen({ match, onBack, onVenueClick }: Props) {
+export default function MatchDetailScreen({ match, onBack, onVenueClick, onMapClick }: Props) {
   const { reminders, toggleReminder, venues, venueMatches } = useApp()
   const reminderActive = reminders.has(match.id)
 
@@ -66,8 +67,11 @@ export default function MatchDetailScreen({ match, onBack, onVenueClick }: Props
           <p className="text-xs font-bold text-brand-muted uppercase tracking-widest">
             Bares donde verlo
           </p>
-          {relatedVenues.length > 0 && (
-            <button className="flex items-center gap-1 text-xs text-brand-blue font-semibold">
+          {relatedVenues.length > 0 && onMapClick && (
+            <button
+              onClick={() => onMapClick(match.id)}
+              className="flex items-center gap-1 text-xs text-brand-blue font-semibold"
+            >
               <MapPin size={12} />
               Ver en mapa
             </button>
