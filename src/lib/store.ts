@@ -5,6 +5,7 @@ import {
   fetchUserReminders, fetchUserFollowedTeamIds,
   upsertReminder, upsertFollowedTeam, saveAllFollowedTeams,
 } from './supabase'
+import { requestPermission, subscribeToPush, scheduleLocalNotification } from './notifications'
 import type { Match, Team, Venue } from '../types'
 import type { AuthUser } from './auth'
 
@@ -18,6 +19,7 @@ export function useAppStore() {
   const [user, setUserState] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
   const userRef = useRef<AuthUser | null>(null)
+  const matchesRef = useRef<Match[]>(demoMatches)
 
   // ── Load public data on mount ────────────────────────────────────
   useEffect(() => {
@@ -29,7 +31,7 @@ export function useAppStore() {
         fetchAllVenueMatches(),
       ])
       // Only replace demo data if Supabase has rows
-      if (m && m.length > 0) setMatches(m)
+      if (m && m.length > 0) { setMatches(m); matchesRef.current = m }
       if (v && v.length > 0) setVenues(v)
       if (t && t.length > 0) setTeams(prev =>
         t.map(team => ({ ...team, enabled: prev.find(p => p.id === team.id)?.enabled ?? false }))
@@ -71,8 +73,22 @@ export function useAppStore() {
       const next = new Set(prev)
       const nowEnabled = !next.has(matchId)
       nowEnabled ? next.add(matchId) : next.delete(matchId)
-      // Persist in background
       if (userRef.current) upsertReminder(userRef.current.id, matchId, nowEnabled)
+
+      if (nowEnabled) {
+        // Request permission and wire up push / local notification
+        requestPermission().then(async permission => {
+          if (permission !== 'granted') return
+          if (userRef.current) {
+            await subscribeToPush(userRef.current.id)
+          }
+          // Also schedule a local notification as same-session fallback
+          const match = matchesRef.current.find(m => m.id === matchId)
+          if (match) {
+            scheduleLocalNotification(matchId, match.home_team, match.away_team, match.match_time, match.match_date)
+          }
+        })
+      }
       return next
     })
   }, [])

@@ -32,6 +32,7 @@ create table if not exists public.matches (
   competition        text not null,
   match_date         text not null,   -- 'HOY' | 'MAÑANA' | 'DD/MM'
   match_time         text not null,   -- 'HH:MM'
+  match_datetime     timestamptz,     -- actual UTC datetime for push scheduling
   home_team_logo     text,
   away_team_logo     text,
   competition_logo   text,
@@ -91,6 +92,17 @@ create table if not exists public.reminders (
   unique(user_id, match_id)
 );
 
+-- ─── push_subscriptions ───────────────────────────────────────────
+create table if not exists public.push_subscriptions (
+  id          uuid primary key default uuid_generate_v4(),
+  user_id     uuid references public.users(id) on delete cascade,
+  endpoint    text not null,
+  p256dh      text not null,
+  auth        text not null,
+  created_at  timestamptz default now(),
+  unique(user_id, endpoint)
+);
+
 -- ─── RLS (Row Level Security) ─────────────────────────────────────
 alter table public.users enable row level security;
 alter table public.teams enable row level security;
@@ -99,6 +111,7 @@ alter table public.venues enable row level security;
 alter table public.venue_matches enable row level security;
 alter table public.user_followed_teams enable row level security;
 alter table public.reminders enable row level security;
+alter table public.push_subscriptions enable row level security;
 
 -- Drop policies before recreating (idempotent)
 do $$ begin
@@ -109,6 +122,7 @@ do $$ begin
   drop policy if exists "users own data" on public.users;
   drop policy if exists "own followed teams" on public.user_followed_teams;
   drop policy if exists "own reminders" on public.reminders;
+  drop policy if exists "own push_subscriptions" on public.push_subscriptions;
 end $$;
 
 -- Public read for teams, matches, venues, venue_matches
@@ -126,3 +140,25 @@ create policy "own followed teams" on public.user_followed_teams
 
 create policy "own reminders" on public.reminders
   for all using (auth.uid() = user_id);
+
+create policy "own push_subscriptions" on public.push_subscriptions
+  for all using (auth.uid() = user_id);
+
+-- ─── pg_cron: trigger send-reminders every 5 min ──────────────────
+-- Run once in the SQL editor after enabling pg_cron extension:
+--
+-- create extension if not exists pg_cron;
+-- select cron.schedule(
+--   'bstv-send-reminders',
+--   '*/5 * * * *',
+--   $$
+--     select net.http_post(
+--       url := 'https://<project-ref>.supabase.co/functions/v1/send-reminders',
+--       headers := '{"Authorization":"Bearer <anon-key>","Content-Type":"application/json"}',
+--       body := '{}'
+--     );
+--   $$
+-- );
+--
+-- Replace <project-ref> with your Supabase project ref
+-- and <anon-key> with your anon public key.
