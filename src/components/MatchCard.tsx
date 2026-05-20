@@ -1,6 +1,5 @@
 import { Bell, ChevronRight } from 'lucide-react'
-import { competitionEmojis } from '../data/demo'
-import TeamLogo from './TeamLogo'
+import TeamLogo, { CompetitionLogo } from './TeamLogo'
 import type { Match } from '../types'
 
 interface Props {
@@ -16,7 +15,6 @@ const dateBadgeStyle: Record<string, string> = {
 }
 
 export default function MatchCard({ match, reminderActive, onToggleReminder, onClick }: Props) {
-  const emoji = competitionEmojis[match.competition] ?? '🏆'
   const badgeClass = dateBadgeStyle[match.match_date] ?? 'bg-white/10 text-brand-muted'
 
   return (
@@ -26,7 +24,7 @@ export default function MatchCard({ match, reminderActive, onToggleReminder, onC
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-base">{emoji}</span>
+          <CompetitionLogo name={match.competition} size={18} />
           <span className="text-xs text-brand-muted font-medium">{match.competition}</span>
         </div>
         <div className="flex items-center gap-2">

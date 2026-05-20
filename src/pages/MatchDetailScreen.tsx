@@ -1,7 +1,6 @@
 import { ArrowLeft, Bell, MapPin, ChevronRight } from 'lucide-react'
 import { useApp } from '../lib/context'
-import { competitionEmojis } from '../data/demo'
-import TeamLogo from '../components/TeamLogo'
+import TeamLogo, { CompetitionLogo } from '../components/TeamLogo'
 import type { Match, Venue } from '../types'
 
 interface Props {
@@ -16,7 +15,6 @@ export default function MatchDetailScreen({ match, onBack, onVenueClick }: Props
 
   const relatedVenueIds = venueMatches[match.id] ?? []
   const relatedVenues = venues.filter(v => relatedVenueIds.includes(v.id))
-  const emoji = competitionEmojis[match.competition] ?? '🏆'
 
   return (
     <div className="flex flex-col h-full overflow-y-auto pb-6">
@@ -34,7 +32,7 @@ export default function MatchDetailScreen({ match, onBack, onVenueClick }: Props
       <div className="mx-5 mb-4">
         <div className="bg-brand-card border border-brand-border rounded-2xl p-5">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <span className="text-lg">{emoji}</span>
+            <CompetitionLogo name={match.competition} size={22} />
             <span className="text-sm font-semibold text-brand-muted">{match.competition}</span>
           </div>
 
