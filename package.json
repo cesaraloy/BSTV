@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "cap:ios": "npm run build && npx cap sync ios && npx cap open ios",
+    "deploy": "npm run build && git worktree add /tmp/bstv-deploy gh-pages 2>/dev/null || true && cp -r dist/. /tmp/bstv-deploy/ && cd /tmp/bstv-deploy && git add -A && git -c commit.gpgsign=false commit -m 'deploy' && git push origin gh-pages && cd - && git worktree remove /tmp/bstv-deploy",
     "cap:android": "npm run build && npx cap sync android && npx cap open android"
   },
   "dependencies": {
