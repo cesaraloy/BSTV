@@ -6,6 +6,10 @@ export interface AuthUser {
   email?: string
 }
 
+// URL base de la app (origin + path, sin query ni hash)
+const APP_URL = import.meta.env.VITE_APP_URL
+  ?? `${window.location.origin}${window.location.pathname.replace(/\/$/, '')}`
+
 // ── Email magic link ───────────────────────────────────────────────
 export async function sendMagicLink(email: string): Promise<{ error: string | null }> {
   if (!supabase) {
@@ -16,7 +20,7 @@ export async function sendMagicLink(email: string): Promise<{ error: string | nu
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: window.location.origin,
+      emailRedirectTo: APP_URL,
     },
   })
   return { error: error?.message ?? null }

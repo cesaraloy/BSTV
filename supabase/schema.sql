@@ -100,6 +100,17 @@ alter table public.venue_matches enable row level security;
 alter table public.user_followed_teams enable row level security;
 alter table public.reminders enable row level security;
 
+-- Drop policies before recreating (idempotent)
+do $$ begin
+  drop policy if exists "public read teams" on public.teams;
+  drop policy if exists "public read matches" on public.matches;
+  drop policy if exists "public read venues" on public.venues;
+  drop policy if exists "public read venue_matches" on public.venue_matches;
+  drop policy if exists "users own data" on public.users;
+  drop policy if exists "own followed teams" on public.user_followed_teams;
+  drop policy if exists "own reminders" on public.reminders;
+end $$;
+
 -- Public read for teams, matches, venues, venue_matches
 create policy "public read teams" on public.teams for select using (true);
 create policy "public read matches" on public.matches for select using (true);
