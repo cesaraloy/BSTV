@@ -120,6 +120,9 @@ do $$ begin
   drop policy if exists "public read venues" on public.venues;
   drop policy if exists "public read venue_matches" on public.venue_matches;
   drop policy if exists "users own data" on public.users;
+  drop policy if exists "users select own" on public.users;
+  drop policy if exists "users insert own" on public.users;
+  drop policy if exists "users update own" on public.users;
   drop policy if exists "own followed teams" on public.user_followed_teams;
   drop policy if exists "own reminders" on public.reminders;
   drop policy if exists "own push_subscriptions" on public.push_subscriptions;
@@ -132,8 +135,13 @@ create policy "public read venues" on public.venues for select using (true);
 create policy "public read venue_matches" on public.venue_matches for select using (true);
 
 -- Users can only read/write their own data
-create policy "users own data" on public.users
-  for all using (auth.uid() = id);
+-- Note: FOR ALL USING only covers SELECT/UPDATE/DELETE; INSERT needs WITH CHECK
+create policy "users select own" on public.users
+  for select using (auth.uid() = id);
+create policy "users insert own" on public.users
+  for insert with check (auth.uid() = id);
+create policy "users update own" on public.users
+  for update using (auth.uid() = id) with check (auth.uid() = id);
 
 create policy "own followed teams" on public.user_followed_teams
   for all using (auth.uid() = user_id);
