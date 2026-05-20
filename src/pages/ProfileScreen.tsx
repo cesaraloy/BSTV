@@ -4,9 +4,11 @@ import { useApp } from '../lib/context'
 
 interface Props {
   onTeamsClick: () => void
+  onSignOut?: () => void
+  userPhone?: string
 }
 
-export default function ProfileScreen({ onTeamsClick }: Props) {
+export default function ProfileScreen({ onTeamsClick, onSignOut, userPhone }: Props) {
   const { theme, toggleTheme } = useApp()
 
   const settingsItems = [
@@ -47,7 +49,7 @@ export default function ProfileScreen({ onTeamsClick }: Props) {
           </div>
         </div>
         <p className="text-lg font-bold text-brand-text">Juan Pérez</p>
-        <p className="text-sm text-brand-muted">juanperez@email.com</p>
+        <p className="text-sm text-brand-muted font-mono">{userPhone ?? 'juanperez@email.com'}</p>
         <div className="mt-2 px-3 py-1 bg-brand-navy rounded-full">
           <Logo size="sm" />
         </div>
@@ -98,7 +100,10 @@ export default function ProfileScreen({ onTeamsClick }: Props) {
         </div>
 
         {/* Logout */}
-        <button className="w-full bg-brand-card border border-red-900/40 rounded-2xl p-4 flex items-center justify-center gap-2 mt-2 active:scale-[0.98] transition-transform">
+        <button
+          onClick={onSignOut}
+          className="w-full bg-brand-card border border-red-900/40 rounded-2xl p-4 flex items-center justify-center gap-2 mt-2 active:scale-[0.98] transition-transform"
+        >
           <LogOut size={18} className="text-red-400" />
           <span className="text-sm font-semibold text-red-400">Cerrar sesión</span>
         </button>

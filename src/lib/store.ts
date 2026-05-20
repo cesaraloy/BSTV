@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react'
 import { demoMatches, demoTeams, demoVenues } from '../data/demo'
 import type { Match, Team, Venue } from '../types'
+import type { AuthUser } from './auth'
 
 export const initialReminders = new Set(['5'])
-export const initialFollowedTeams = new Set(['1', '2', '4', '7'])
 
 export function useAppStore() {
   const [matches] = useState<Match[]>(demoMatches)
@@ -11,13 +11,10 @@ export function useAppStore() {
   const [teams, setTeams] = useState<Team[]>(demoTeams)
   const [reminders, setReminders] = useState<Set<string>>(initialReminders)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [user, setUser] = useState<AuthUser | null>(null)
 
   useEffect(() => {
-    if (theme === 'light') {
-      document.documentElement.classList.add('light')
-    } else {
-      document.documentElement.classList.remove('light')
-    }
+    document.documentElement.classList.toggle('light', theme === 'light')
   }, [theme])
 
   const toggleReminder = useCallback((matchId: string) => {
@@ -39,5 +36,5 @@ export function useAppStore() {
     setTheme(t => t === 'dark' ? 'light' : 'dark')
   }, [])
 
-  return { matches, venues, teams, reminders, theme, toggleReminder, toggleTeam, toggleTheme }
+  return { matches, venues, teams, reminders, theme, user, setUser, toggleReminder, toggleTeam, toggleTheme }
 }

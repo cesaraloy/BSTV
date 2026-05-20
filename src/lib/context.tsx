@@ -1,6 +1,7 @@
 import React, { createContext, useContext } from 'react'
 import { useAppStore } from './store'
 import type { Match, Team, Venue } from '../types'
+import type { AuthUser } from './auth'
 
 interface AppContextType {
   matches: Match[]
@@ -8,6 +9,8 @@ interface AppContextType {
   teams: Team[]
   reminders: Set<string>
   theme: 'dark' | 'light'
+  user: AuthUser | null
+  setUser: (user: AuthUser | null) => void
   toggleReminder: (matchId: string) => void
   toggleTeam: (teamId: string) => void
   toggleTheme: () => void
