@@ -3,6 +3,7 @@ import { AppProvider } from './lib/context'
 import { useApp } from './lib/context'
 import { sendMagicLink, sendOTP, verifyOTP, signOut, getSession, onAuthStateChange } from './lib/auth'
 import BottomNav from './components/BottomNav'
+import HomeScreen from './pages/HomeScreen'
 import CalendarScreen from './pages/CalendarScreen'
 import MapScreen from './pages/MapScreen'
 import ProfileScreen from './pages/ProfileScreen'
@@ -15,7 +16,7 @@ import type { Match, Venue } from './types'
 
 const DEMO_MODE = !import.meta.env.VITE_SUPABASE_URL
 
-type Tab = 'calendar' | 'map' | 'profile'
+type Tab = 'home' | 'calendar' | 'map' | 'profile'
 type Screen =
   | { type: 'tab'; tab: Tab }
   | { type: 'match-detail'; match: Match }
@@ -33,8 +34,8 @@ function AppInner() {
   const [authStep, setAuthStep] = useState<AuthStep>(
     DEMO_MODE ? { step: 'app' } : { step: 'loading' }
   )
-  const [screen, setScreen] = useState<Screen>({ type: 'tab', tab: 'calendar' })
-  const [activeTab, setActiveTab] = useState<Tab>('calendar')
+  const [screen, setScreen] = useState<Screen>({ type: 'tab', tab: 'home' })
+  const [activeTab, setActiveTab] = useState<Tab>('home')
 
   // Restore session on mount + listen for magic link redirect
   useEffect(() => {
@@ -142,6 +143,14 @@ function AppInner() {
   return (
     <div className="relative w-full h-screen overflow-hidden bg-brand-bg flex flex-col">
       <div className="flex-1 overflow-hidden relative">
+        {screen.type === 'tab' && screen.tab === 'home' && (
+          <HomeScreen
+            onMatchClick={match => navigate({ type: 'match-detail', match })}
+            onVenueClick={venue => navigate({ type: 'venue-detail', venue, from: 'home' as Tab })}
+            onAllMatchesClick={() => handleTabChange('calendar')}
+            onMapClick={() => handleTabChange('map')}
+          />
+        )}
         {screen.type === 'tab' && screen.tab === 'calendar' && (
           <CalendarScreen onMatchClick={match => navigate({ type: 'match-detail', match })} />
         )}

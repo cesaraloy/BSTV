@@ -1,30 +1,33 @@
-import { Calendar, MapPin, User } from 'lucide-react'
+import { Home, Calendar, MapPin, User } from 'lucide-react'
+
+type Tab = 'home' | 'calendar' | 'map' | 'profile'
 
 interface Props {
-  active: 'calendar' | 'map' | 'profile'
-  onChange: (tab: 'calendar' | 'map' | 'profile') => void
+  active: Tab
+  onChange: (tab: Tab) => void
 }
 
 const tabs = [
+  { id: 'home'     as const, label: 'Inicio',   Icon: Home },
   { id: 'calendar' as const, label: 'Partidos', Icon: Calendar },
-  { id: 'map' as const, label: 'Mapa', Icon: MapPin },
-  { id: 'profile' as const, label: 'Perfil', Icon: User },
+  { id: 'map'      as const, label: 'Mapa',     Icon: MapPin },
+  { id: 'profile'  as const, label: 'Perfil',   Icon: User },
 ]
 
 export default function BottomNav({ active, onChange }: Props) {
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-50 bg-brand-surface border-t border-brand-border safe-bottom">
-      <div className="flex items-center justify-around px-4 pt-2 pb-safe">
+      <div className="flex items-center justify-around px-2 pt-2 pb-safe">
         {tabs.map(({ id, label, Icon }) => {
           const isActive = active === id
           return (
             <button
               key={id}
               onClick={() => onChange(id)}
-              className="flex flex-col items-center gap-1 py-1 px-4 transition-colors"
+              className="flex flex-col items-center gap-1 py-1 px-3 transition-colors"
             >
               <Icon
-                size={24}
+                size={22}
                 strokeWidth={isActive ? 2.5 : 1.5}
                 className={isActive ? 'text-brand-blue' : 'text-brand-muted'}
               />
