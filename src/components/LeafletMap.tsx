@@ -39,7 +39,17 @@ export default function LeafletMap({ venues, selectedVenue, onSelectVenue, userL
     L.control.zoom({ position: 'bottomright' }).addTo(map)
 
     mapRef.current = map
+
+    // invalidateSize when container becomes visible (tab was hidden during init)
+    const ro = new ResizeObserver(() => {
+      if (containerRef.current && containerRef.current.offsetHeight > 0) {
+        map.invalidateSize()
+      }
+    })
+    ro.observe(containerRef.current)
+
     return () => {
+      ro.disconnect()
       map.remove()
       mapRef.current = null
       markersRef.current.clear()
