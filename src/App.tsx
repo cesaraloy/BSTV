@@ -143,24 +143,27 @@ function AppInner() {
 
   const showNav = screen.type === 'tab'
 
+  const isTab = screen.type === 'tab'
+
   return (
     <div className="relative w-full h-screen overflow-hidden bg-brand-bg flex flex-col">
       <div className="flex-1 overflow-hidden relative">
-        {screen.type === 'tab' && screen.tab === 'home' && (
+        {/* Tab screens: always mounted, hidden when not active to preserve local state */}
+        <div className={isTab && screen.tab === 'home' ? '' : 'hidden'}>
           <HomeScreen
             onMatchClick={match => navigate({ type: 'match-detail', match })}
             onVenueClick={venue => navigate({ type: 'venue-detail', venue, from: 'home' as Tab })}
             onAllMatchesClick={() => handleTabChange('calendar')}
             onMapClick={() => handleTabChange('map')}
           />
-        )}
-        {screen.type === 'tab' && screen.tab === 'calendar' && (
+        </div>
+        <div className={isTab && screen.tab === 'calendar' ? '' : 'hidden'}>
           <CalendarScreen onMatchClick={match => navigate({ type: 'match-detail', match })} />
-        )}
-        {screen.type === 'tab' && screen.tab === 'map' && (
+        </div>
+        <div className={isTab && screen.tab === 'map' ? '' : 'hidden'}>
           <MapScreen onVenueClick={venue => navigate({ type: 'venue-detail', venue, from: 'map' })} />
-        )}
-        {screen.type === 'tab' && screen.tab === 'profile' && (
+        </div>
+        <div className={isTab && screen.tab === 'profile' ? '' : 'hidden'}>
           <ProfileScreen
             onTeamsClick={() => navigate({ type: 'teams' })}
             onFAQClick={() => navigate({ type: 'faq' })}
@@ -168,7 +171,9 @@ function AppInner() {
             userPhone={user?.phone}
             userEmail={user?.email}
           />
-        )}
+        </div>
+
+        {/* Stack screens: mounted on demand */}
         {screen.type === 'match-detail' && (
           <MatchDetailScreen
             match={screen.match}
