@@ -1,6 +1,7 @@
 import { Bell, ChevronRight, MapPin, Calendar } from 'lucide-react'
 import { useApp } from '../lib/context'
 import TeamLogo, { CompetitionLogo } from '../components/TeamLogo'
+import Logo from '../components/Logo'
 import { competitionColors } from '../data/demo'
 import type { Match, Venue } from '../types'
 
@@ -32,7 +33,7 @@ export default function HomeScreen({ onMatchClick, onAllMatchesClick, onMapClick
     <div className="flex flex-col h-full overflow-y-auto pb-28">
       {/* Header */}
       <div className="pt-14 px-5 pb-4">
-        <p className="text-brand-muted text-xs font-medium mb-0.5">BarSportTV</p>
+        <Logo size="sm" className="mb-1" />
         <h1 className="text-xl font-bold text-brand-text">{greeting}</h1>
       </div>
 

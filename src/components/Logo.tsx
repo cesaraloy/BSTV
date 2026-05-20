@@ -1,22 +1,23 @@
+import { useApp } from '../lib/context'
+
+const LOGO_DARK  = 'https://wgkxsvgutyzcsfsexgpn.supabase.co/storage/v1/object/public/images/masbarsport.png'
+const LOGO_LIGHT = 'https://wgkxsvgutyzcsfsexgpn.supabase.co/storage/v1/object/public/images/masbarsport_light.png'
+
+const heightMap = { sm: 'h-6', md: 'h-8', lg: 'h-12' }
+
 interface Props {
   size?: 'sm' | 'md' | 'lg'
   className?: string
 }
 
-const sizeMap = {
-  sm: { plus: 'text-lg', bar: 'text-base', sport: 'text-base', tv: 'text-sm' },
-  md: { plus: 'text-2xl', bar: 'text-xl', sport: 'text-xl', tv: 'text-lg' },
-  lg: { plus: 'text-4xl', bar: 'text-3xl', sport: 'text-3xl', tv: 'text-2xl' },
-}
-
 export default function Logo({ size = 'md', className = '' }: Props) {
-  const s = sizeMap[size]
+  const { theme } = useApp()
+  const src = theme === 'light' ? LOGO_LIGHT : LOGO_DARK
   return (
-    <span className={`inline-flex items-baseline font-black tracking-tight select-none ${className}`}>
-      <span className={`${s.plus} text-brand-blue`}>+</span>
-      <span className={`${s.bar} text-brand-text`}>Bar</span>
-      <span className={`${s.sport} text-brand-text font-semibold`}>Sport</span>
-      <span className={`${s.tv} text-brand-blue font-black`}>TV</span>
-    </span>
+    <img
+      src={src}
+      alt="+BarSportTV"
+      className={`${heightMap[size]} w-auto object-contain select-none ${className}`}
+    />
   )
 }
