@@ -2,66 +2,109 @@ import { supabase } from './supabase'
 
 export interface AuthUser {
   id: string
-  phone: string
+  phone?: string
+  email?: string
 }
 
-// Send OTP to phone number
+// ── Email magic link ───────────────────────────────────────────────
+export async function sendMagicLink(email: string): Promise<{ error: string | null }> {
+  if (!supabase) {
+    console.log('[Demo] Magic link enviado a', email)
+    return { error: null }
+  }
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: window.location.origin,
+    },
+  })
+  return { error: error?.message ?? null }
+}
+
+// ── SMS OTP ───────────────────────────────────────────────────────
 export async function sendOTP(phone: string): Promise<{ error: string | null }> {
-  // Demo mode — no Supabase configured
   if (!supabase) {
     console.log('[Demo] OTP enviado a', phone)
     return { error: null }
   }
 
   const { error } = await supabase.auth.signInWithOtp({ phone })
-  if (error) return { error: error.message }
-  return { error: null }
+  return { error: error?.message ?? null }
 }
 
-// Verify OTP code
 export async function verifyOTP(
   phone: string,
-  token: string
+  token: string,
 ): Promise<{ user: AuthUser | null; error: string | null }> {
-  // Demo mode — accept any 6-digit code
   if (!supabase) {
-    if (token === '000000' || token.length === 6) {
-      return { user: { id: 'demo-user', phone }, error: null }
-    }
+    if (token.length === 6) return { user: { id: 'demo-user', phone }, error: null }
     return { user: null, error: 'Código incorrecto' }
   }
 
-  const { data, error } = await supabase.auth.verifyOtp({
-    phone,
-    token,
-    type: 'sms',
-  })
-
+  const { data, error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' })
   if (error) return { user: null, error: error.message }
   if (!data.user) return { user: null, error: 'Error de verificación' }
 
-  // Upsert user row in public.users
-  await supabase.from('users').upsert({
-    id: data.user.id,
-    phone: data.user.phone ?? phone,
-    name: 'Usuario',
-    email: '',
-  }, { onConflict: 'id' })
-
+  await upsertUser(data.user.id, { phone: data.user.phone ?? phone })
   return { user: { id: data.user.id, phone: data.user.phone ?? phone }, error: null }
 }
 
-// Get current session
+// ── Session management ────────────────────────────────────────────
 export async function getSession(): Promise<AuthUser | null> {
   if (!supabase) return null
 
   const { data: { session } } = await supabase.auth.getSession()
   if (!session?.user) return null
-  return { id: session.user.id, phone: session.user.phone ?? '' }
+
+  return {
+    id: session.user.id,
+    phone: session.user.phone ?? undefined,
+    email: session.user.email ?? undefined,
+  }
 }
 
-// Sign out
+// Listen to auth state changes (email magic link redirect, etc.)
+export function onAuthStateChange(
+  callback: (user: AuthUser | null) => void,
+) {
+  if (!supabase) return () => {}
+
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    async (event, session) => {
+      if (session?.user) {
+        const user: AuthUser = {
+          id: session.user.id,
+          phone: session.user.phone ?? undefined,
+          email: session.user.email ?? undefined,
+        }
+        // Upsert on first sign-in
+        if (event === 'SIGNED_IN') {
+          await upsertUser(user.id, { phone: user.phone, email: user.email })
+        }
+        callback(user)
+      } else {
+        callback(null)
+      }
+    }
+  )
+
+  return () => subscription.unsubscribe()
+}
+
 export async function signOut(): Promise<void> {
   if (!supabase) return
   await supabase.auth.signOut()
+}
+
+// ── Helpers ───────────────────────────────────────────────────────
+async function upsertUser(
+  id: string,
+  fields: { phone?: string; email?: string },
+) {
+  if (!supabase) return
+  await supabase.from('users').upsert(
+    { id, name: 'Usuario', ...fields },
+    { onConflict: 'id' },
+  )
 }

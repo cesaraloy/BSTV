@@ -6,9 +6,10 @@ interface Props {
   onTeamsClick: () => void
   onSignOut?: () => void
   userPhone?: string
+  userEmail?: string
 }
 
-export default function ProfileScreen({ onTeamsClick, onSignOut, userPhone }: Props) {
+export default function ProfileScreen({ onTeamsClick, onSignOut, userPhone, userEmail }: Props) {
   const { theme, toggleTheme } = useApp()
 
   const settingsItems = [
@@ -49,7 +50,9 @@ export default function ProfileScreen({ onTeamsClick, onSignOut, userPhone }: Pr
           </div>
         </div>
         <p className="text-lg font-bold text-brand-text">Juan Pérez</p>
-        <p className="text-sm text-brand-muted font-mono">{userPhone ?? 'juanperez@email.com'}</p>
+        <p className="text-sm text-brand-muted font-mono">
+          {userEmail ?? userPhone ?? 'juanperez@email.com'}
+        </p>
         <div className="mt-2 px-3 py-1 bg-brand-navy rounded-full">
           <Logo size="sm" />
         </div>

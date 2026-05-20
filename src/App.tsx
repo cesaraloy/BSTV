@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AppProvider } from './lib/context'
 import { useApp } from './lib/context'
-import { sendOTP, verifyOTP, signOut } from './lib/auth'
+import { sendMagicLink, sendOTP, verifyOTP, signOut, getSession, onAuthStateChange } from './lib/auth'
 import BottomNav from './components/BottomNav'
 import CalendarScreen from './pages/CalendarScreen'
 import MapScreen from './pages/MapScreen'
@@ -13,6 +13,8 @@ import LoginScreen from './pages/LoginScreen'
 import OTPScreen from './pages/OTPScreen'
 import type { Match, Venue } from './types'
 
+const DEMO_MODE = !import.meta.env.VITE_SUPABASE_URL
+
 type Tab = 'calendar' | 'map' | 'profile'
 type Screen =
   | { type: 'tab'; tab: Tab }
@@ -20,8 +22,8 @@ type Screen =
   | { type: 'venue-detail'; venue: Venue; from?: Tab }
   | { type: 'teams' }
 
-// Auth flow state separate from app screen state
 type AuthStep =
+  | { step: 'loading' }
   | { step: 'login' }
   | { step: 'otp'; phone: string }
   | { step: 'app' }
@@ -29,13 +31,40 @@ type AuthStep =
 function AppInner() {
   const { user, setUser } = useApp()
   const [authStep, setAuthStep] = useState<AuthStep>(
-    // Skip login in demo mode (no Supabase configured)
-    import.meta.env.VITE_SUPABASE_URL ? { step: 'login' } : { step: 'app' }
+    DEMO_MODE ? { step: 'app' } : { step: 'loading' }
   )
   const [screen, setScreen] = useState<Screen>({ type: 'tab', tab: 'calendar' })
   const [activeTab, setActiveTab] = useState<Tab>('calendar')
 
+  // Restore session on mount + listen for magic link redirect
+  useEffect(() => {
+    if (DEMO_MODE) return
+
+    getSession().then(session => {
+      if (session) {
+        setUser(session)
+        setAuthStep({ step: 'app' })
+      } else {
+        setAuthStep({ step: 'login' })
+      }
+    })
+
+    const unsubscribe = onAuthStateChange(authUser => {
+      if (authUser) {
+        setUser(authUser)
+        setAuthStep({ step: 'app' })
+      } else {
+        setUser(null)
+        setAuthStep({ step: 'login' })
+      }
+    })
+
+    return unsubscribe
+  }, [])
+
   // ── Auth handlers ──────────────────────────────────────────────
+  const handleSendEmail = async (email: string) => sendMagicLink(email)
+
   const handleSendOTP = async (phone: string) => {
     const result = await sendOTP(phone)
     if (!result.error) setAuthStep({ step: 'otp', phone })
@@ -52,22 +81,30 @@ function AppInner() {
     return { error }
   }
 
-  const handleResend = async () => {
-    if (authStep.step !== 'otp') return { error: null }
-    return sendOTP(authStep.phone)
-  }
-
   const handleSignOut = async () => {
     await signOut()
     setUser(null)
     setAuthStep({ step: 'login' })
   }
 
+  // ── Loading splash ─────────────────────────────────────────────
+  if (authStep.step === 'loading') {
+    return (
+      <div className="relative w-full h-screen bg-brand-bg flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-brand-navy flex items-center justify-center animate-pulse">
+            <span className="text-3xl">⚽</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // ── Auth screens ───────────────────────────────────────────────
   if (authStep.step === 'login') {
     return (
       <div className="relative w-full h-screen overflow-hidden bg-brand-bg">
-        <LoginScreen onSendOTP={handleSendOTP} />
+        <LoginScreen onSendEmail={handleSendEmail} onSendOTP={handleSendOTP} />
       </div>
     )
   }
@@ -79,7 +116,7 @@ function AppInner() {
           phone={authStep.phone}
           onVerify={handleVerifyOTP}
           onBack={() => setAuthStep({ step: 'login' })}
-          onResend={handleResend}
+          onResend={() => sendOTP(authStep.phone)}
         />
       </div>
     )
@@ -116,6 +153,7 @@ function AppInner() {
             onTeamsClick={() => navigate({ type: 'teams' })}
             onSignOut={handleSignOut}
             userPhone={user?.phone}
+            userEmail={user?.email}
           />
         )}
         {screen.type === 'match-detail' && (
