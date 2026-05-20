@@ -16,7 +16,9 @@ export function useAppStore() {
   const [teams, setTeams] = useState<Team[]>(demoTeams)
   const [venueMatches, setVenueMatches] = useState<Record<string, string[]>>(demoVenueMatchRelations)
   const [reminders, setReminders] = useState<Set<string>>(new Set(['5']))
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [theme, setTheme] = useState<'dark' | 'light'>(
+    () => (localStorage.getItem('bstv-theme') as 'dark' | 'light') ?? 'dark'
+  )
   const [user, setUserState] = useState<AuthUser | null>(null)
   const [userProfile, setUserProfile] = useState<{ name: string; location: string }>({ name: '', location: 'Madrid, España' })
   const [loading, setLoading] = useState(true)
@@ -118,7 +120,11 @@ export function useAppStore() {
   }, [])
 
   const toggleTheme = useCallback(() => {
-    setTheme(t => t === 'dark' ? 'light' : 'dark')
+    setTheme(t => {
+      const next = t === 'dark' ? 'light' : 'dark'
+      localStorage.setItem('bstv-theme', next)
+      return next
+    })
   }, [])
 
   const saveProfile = useCallback((name: string, location: string) => {
