@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { ChevronRight, LogOut, MapPin, Bell, Sun, Moon, Check, Edit3, X, HelpCircle } from 'lucide-react'
 import Logo from '../components/Logo'
-import { AvatarPreset, AvatarPicker } from '../components/AvatarPreset'
+import { AvatarPreset } from '../components/AvatarPreset'
 import { useApp } from '../lib/context'
 
 interface Props {
   onTeamsClick: () => void
   onFAQClick: () => void
+  onAvatarClick: () => void
   onSignOut?: () => void
   userPhone?: string
   userEmail?: string
@@ -18,13 +19,12 @@ const ADVANCE_OPTIONS = [
   { label: '1 hora', value: 60 },
 ]
 
-export default function ProfileScreen({ onTeamsClick, onFAQClick, onSignOut, userPhone, userEmail }: Props) {
-  const { theme, toggleTheme, reminders, teams, userProfile, avatarPreset, notifAdvance, saveProfile, setNotifAdvance, setAvatarPreset } = useApp()
+export default function ProfileScreen({ onTeamsClick, onFAQClick, onAvatarClick, onSignOut, userPhone, userEmail }: Props) {
+  const { theme, toggleTheme, reminders, teams, userProfile, avatarPreset, notifAdvance, saveProfile, setNotifAdvance } = useApp()
   const [editing, setEditing] = useState(false)
   const [draftName, setDraftName] = useState('')
   const [draftCity, setDraftCity] = useState('')
   const [showNotifPicker, setShowNotifPicker] = useState(false)
-  const [showAvatarPicker, setShowAvatarPicker] = useState(false)
 
   const followedCount = teams.filter(t => t.enabled).length
   const reminderCount = reminders.size
@@ -36,7 +36,6 @@ export default function ProfileScreen({ onTeamsClick, onFAQClick, onSignOut, use
     setDraftName(userProfile.name || displayName)
     setDraftCity(displayCity)
     setEditing(true)
-    setShowAvatarPicker(false)
   }
 
   function confirmEdit() {
@@ -70,21 +69,13 @@ export default function ProfileScreen({ onTeamsClick, onFAQClick, onSignOut, use
       {/* Avatar + user info */}
       <div className="flex flex-col items-center px-5 pb-5">
         <div className="relative mb-3">
-          <button onClick={() => { setShowAvatarPicker(p => !p); setEditing(false) }}>
+          <button onClick={onAvatarClick}>
             <AvatarPreset index={avatarPreset} size="lg" />
           </button>
           <div className="absolute bottom-0 right-0 w-7 h-7 bg-brand-navy rounded-full flex items-center justify-center border-2 border-brand-bg pointer-events-none">
             <Edit3 size={11} className="text-white" />
           </div>
         </div>
-
-        {/* Avatar picker */}
-        {showAvatarPicker && (
-          <div className="w-full max-w-xs mb-4 bg-brand-card border border-brand-border rounded-2xl p-4">
-            <p className="text-xs font-bold text-brand-muted uppercase tracking-widest mb-3 text-center">Elige tu avatar</p>
-            <AvatarPicker selected={avatarPreset} onChange={i => { setAvatarPreset(i); setShowAvatarPicker(false) }} />
-          </div>
-        )}
 
         {editing ? (
           <div className="w-full max-w-xs flex flex-col gap-2">
@@ -117,7 +108,7 @@ export default function ProfileScreen({ onTeamsClick, onFAQClick, onSignOut, use
       </div>
 
       {/* Stats strip */}
-      {!editing && !showAvatarPicker && (
+      {!editing && (
         <div className="mx-5 mb-4 grid grid-cols-2 gap-3">
           <div className="bg-brand-card border border-brand-border rounded-2xl p-4 flex flex-col items-center gap-1">
             <span className="text-2xl font-black text-brand-blue">{reminderCount}</span>
