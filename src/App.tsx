@@ -159,9 +159,9 @@ function AppInner() {
   return (
     <div className="relative w-full h-screen overflow-hidden bg-brand-bg flex flex-col">
       <div className="flex-1 overflow-hidden relative">
-        {/* Tab screens: lazy-mounted on first visit, then kept alive hidden */}
+        {/* Tab screens: lazy-mounted on first visit, kept alive with absolute overlay */}
         {visitedTabs.has('home') && (
-          <div className={isTab && screen.tab === 'home' ? '' : 'hidden'}>
+          <div className={`absolute inset-0 ${isTab && screen.tab === 'home' ? '' : 'hidden'}`}>
             <HomeScreen
               onMatchClick={match => navigate({ type: 'match-detail', match })}
               onVenueClick={venue => navigate({ type: 'venue-detail', venue, from: 'home' as Tab })}
@@ -171,12 +171,12 @@ function AppInner() {
           </div>
         )}
         {visitedTabs.has('calendar') && (
-          <div className={isTab && screen.tab === 'calendar' ? '' : 'hidden'}>
+          <div className={`absolute inset-0 ${isTab && screen.tab === 'calendar' ? '' : 'hidden'}`}>
             <CalendarScreen onMatchClick={match => navigate({ type: 'match-detail', match })} />
           </div>
         )}
         {visitedTabs.has('map') && (
-          <div className={isTab && screen.tab === 'map' ? '' : 'hidden'}>
+          <div className={`absolute inset-0 ${isTab && screen.tab === 'map' ? '' : 'hidden'}`}>
             <MapScreen
               onVenueClick={venue => navigate({ type: 'venue-detail', venue, from: 'map' })}
               matchFilter={mapMatchFilter}
@@ -184,7 +184,7 @@ function AppInner() {
           </div>
         )}
         {visitedTabs.has('profile') && (
-          <div className={isTab && screen.tab === 'profile' ? '' : 'hidden'}>
+          <div className={`absolute inset-0 ${isTab && screen.tab === 'profile' ? '' : 'hidden'}`}>
             <ProfileScreen
               onTeamsClick={() => navigate({ type: 'teams' })}
               onFAQClick={() => navigate({ type: 'faq' })}
