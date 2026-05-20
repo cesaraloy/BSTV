@@ -7,8 +7,10 @@ interface AppContextType {
   venues: Venue[]
   teams: Team[]
   reminders: Set<string>
+  theme: 'dark' | 'light'
   toggleReminder: (matchId: string) => void
   toggleTeam: (teamId: string) => void
+  toggleTheme: () => void
 }
 
 const AppContext = createContext<AppContextType | null>(null)

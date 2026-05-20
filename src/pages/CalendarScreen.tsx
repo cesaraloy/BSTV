@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { SlidersHorizontal } from 'lucide-react'
 import MatchCard from '../components/MatchCard'
+import Logo from '../components/Logo'
 import { useApp } from '../lib/context'
 import type { Match } from '../types'
 
-const FILTERS = ['Todos', 'Hoy', 'Mañana', 'Esta semana', 'LaLiga', 'Champions', 'Premier']
+const FILTERS = ['Todos', 'Hoy', 'Mañana', 'Hypermotion', 'Champions', 'Europa', "Women's CL", 'MotoGP', 'F1']
 
 interface Props {
   onMatchClick: (match: Match) => void
@@ -18,10 +19,12 @@ export default function CalendarScreen({ onMatchClick }: Props) {
     if (activeFilter === 'Todos') return true
     if (activeFilter === 'Hoy') return m.match_date === 'HOY'
     if (activeFilter === 'Mañana') return m.match_date === 'MAÑANA'
-    if (activeFilter === 'Esta semana') return true
-    if (activeFilter === 'LaLiga') return m.competition.includes('LaLiga')
-    if (activeFilter === 'Champions') return m.competition.includes('Champions')
-    if (activeFilter === 'Premier') return m.competition.includes('Premier')
+    if (activeFilter === 'Hypermotion') return m.competition === 'LaLiga Hypermotion'
+    if (activeFilter === 'Champions') return m.competition === 'Champions League'
+    if (activeFilter === 'Europa') return m.competition === 'Europa League'
+    if (activeFilter === "Women's CL") return m.competition === "Women's Champions League"
+    if (activeFilter === 'MotoGP') return m.competition === 'MotoGP'
+    if (activeFilter === 'F1') return m.competition === 'Formula 1'
     return true
   })
 
@@ -30,7 +33,7 @@ export default function CalendarScreen({ onMatchClick }: Props) {
       {/* Header */}
       <div className="pt-14 px-5 pb-3 bg-brand-bg">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-white tracking-tight">Calendario de partidos</h1>
+          <Logo size="md" />
           <button className="w-9 h-9 rounded-full bg-brand-card border border-brand-border flex items-center justify-center">
             <SlidersHorizontal size={17} className="text-brand-text" />
           </button>
@@ -44,7 +47,7 @@ export default function CalendarScreen({ onMatchClick }: Props) {
               onClick={() => setActiveFilter(f)}
               className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                 activeFilter === f
-                  ? 'bg-brand-green text-brand-bg'
+                  ? 'bg-brand-navy text-white'
                   : 'bg-brand-card border border-brand-border text-brand-muted'
               }`}
             >

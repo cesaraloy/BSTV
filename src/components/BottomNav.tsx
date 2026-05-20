@@ -26,13 +26,9 @@ export default function BottomNav({ active, onChange }: Props) {
               <Icon
                 size={24}
                 strokeWidth={isActive ? 2.5 : 1.5}
-                className={isActive ? 'text-brand-green' : 'text-brand-muted'}
+                className={isActive ? 'text-brand-blue' : 'text-brand-muted'}
               />
-              <span
-                className={`text-[10px] font-medium tracking-wide ${
-                  isActive ? 'text-brand-green' : 'text-brand-muted'
-                }`}
-              >
+              <span className={`text-[10px] font-medium tracking-wide ${isActive ? 'text-brand-blue' : 'text-brand-muted'}`}>
                 {label}
               </span>
             </button>

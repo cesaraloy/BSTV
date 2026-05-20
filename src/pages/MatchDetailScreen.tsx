@@ -35,33 +35,30 @@ export default function MatchDetailScreen({ match, onBack, onVenueClick }: Props
       {/* Match hero */}
       <div className="mx-5 mb-4">
         <div className="bg-brand-card border border-brand-border rounded-2xl p-5">
-          {/* Competition */}
           <div className="flex items-center justify-center gap-2 mb-4">
             <span className="text-lg">{emoji}</span>
             <span className="text-sm font-semibold text-brand-muted">{match.competition}</span>
           </div>
 
-          {/* Teams */}
           <div className="flex items-center justify-between mb-4">
             <TeamHero name={match.home_team} initials={homeInitials} />
             <div className="flex flex-col items-center px-4">
-              <span className="text-3xl font-black text-white tracking-tight">{match.match_time}</span>
+              <span className="text-3xl font-black text-brand-text tracking-tight">{match.match_time}</span>
               <span className="text-xs text-brand-muted mt-1 font-medium">VS</span>
-              <span className="text-sm font-semibold text-brand-green mt-1">{match.match_date}</span>
+              <span className="text-sm font-semibold text-brand-blue mt-1">{match.match_date}</span>
             </div>
             <TeamHero name={match.away_team} initials={awayInitials} right />
           </div>
 
-          {/* Reminder button */}
           <button
             onClick={() => toggleReminder(match.id)}
             className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 font-semibold text-sm transition-colors ${
               reminderActive
-                ? 'bg-brand-green/10 border border-brand-green text-brand-green'
+                ? 'bg-brand-navy/20 border border-brand-blue text-brand-blue'
                 : 'bg-brand-accent border border-brand-border text-brand-text'
             }`}
           >
-            <Bell size={16} strokeWidth={2} className={reminderActive ? 'fill-brand-green/30' : ''} />
+            <Bell size={16} strokeWidth={2} />
             {reminderActive ? 'Recordatorio activado' : 'Activar recordatorio'}
           </button>
         </div>
@@ -74,7 +71,7 @@ export default function MatchDetailScreen({ match, onBack, onVenueClick }: Props
             Bares donde verlo
           </p>
           {relatedVenues.length > 0 && (
-            <button className="flex items-center gap-1 text-xs text-brand-green font-semibold">
+            <button className="flex items-center gap-1 text-xs text-brand-blue font-semibold">
               <MapPin size={12} />
               Ver en mapa
             </button>
@@ -93,16 +90,16 @@ export default function MatchDetailScreen({ match, onBack, onVenueClick }: Props
                 onClick={() => onVenueClick(venue)}
                 className="w-full bg-brand-card border border-brand-border rounded-2xl p-4 flex items-center gap-3 active:scale-[0.98] transition-transform text-left"
               >
-                <div className="w-10 h-10 rounded-xl bg-brand-accent flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-brand-accent border border-brand-border flex items-center justify-center shrink-0">
                   <span className="text-lg">🍺</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-white">{venue.name}</p>
+                  <p className="text-sm font-bold text-brand-text">{venue.name}</p>
                   <div className="flex items-center gap-1 mt-0.5">
                     <MapPin size={10} className="text-brand-muted" />
                     <span className="text-xs text-brand-muted truncate">{venue.address}</span>
                   </div>
-                  <span className={`text-[10px] font-semibold ${venue.is_open ? 'text-brand-green' : 'text-red-400'}`}>
+                  <span className={`text-[10px] font-semibold ${venue.is_open ? 'text-brand-blue' : 'text-red-400'}`}>
                     {venue.is_open ? `Abierto hasta ${venue.open_until}` : 'Cerrado'}
                   </span>
                 </div>
@@ -119,10 +116,10 @@ export default function MatchDetailScreen({ match, onBack, onVenueClick }: Props
 function TeamHero({ name, initials, right }: { name: string; initials: string; right?: boolean }) {
   return (
     <div className={`flex flex-col items-center gap-2 flex-1 ${right ? '' : ''}`}>
-      <div className="w-16 h-16 rounded-2xl bg-brand-accent flex items-center justify-center">
-        <span className="text-sm font-black text-white">{initials}</span>
+      <div className="w-16 h-16 rounded-2xl bg-brand-accent border border-brand-border flex items-center justify-center">
+        <span className="text-sm font-black text-brand-text">{initials}</span>
       </div>
-      <span className="text-xs font-bold text-white text-center leading-tight max-w-[80px]">{name}</span>
+      <span className="text-xs font-bold text-brand-text text-center leading-tight max-w-[80px]">{name}</span>
     </div>
   )
 }

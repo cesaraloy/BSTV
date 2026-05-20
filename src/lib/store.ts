@@ -1,16 +1,24 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { demoMatches, demoTeams, demoVenues } from '../data/demo'
 import type { Match, Team, Venue } from '../types'
 
-// Simple reactive store using React state lifted to context
-export const initialReminders = new Set(['5']) // Inter vs Arsenal has reminder
-export const initialFollowedTeams = new Set(['1', '2', '4', '7']) // Real Madrid, Barça, Arsenal, Inter
+export const initialReminders = new Set(['5'])
+export const initialFollowedTeams = new Set(['1', '2', '4', '7'])
 
 export function useAppStore() {
   const [matches] = useState<Match[]>(demoMatches)
   const [venues] = useState<Venue[]>(demoVenues)
   const [teams, setTeams] = useState<Team[]>(demoTeams)
   const [reminders, setReminders] = useState<Set<string>>(initialReminders)
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.documentElement.classList.add('light')
+    } else {
+      document.documentElement.classList.remove('light')
+    }
+  }, [theme])
 
   const toggleReminder = useCallback((matchId: string) => {
     setReminders(prev => {
@@ -27,5 +35,9 @@ export function useAppStore() {
     )
   }, [])
 
-  return { matches, venues, teams, reminders, toggleReminder, toggleTeam }
+  const toggleTheme = useCallback(() => {
+    setTheme(t => t === 'dark' ? 'light' : 'dark')
+  }, [])
+
+  return { matches, venues, teams, reminders, theme, toggleReminder, toggleTeam, toggleTheme }
 }
