@@ -1,6 +1,5 @@
 import { ArrowLeft, MapPin, Phone, Star, ExternalLink, ChevronRight } from 'lucide-react'
 import { useApp } from '../lib/context'
-import { venueMatchRelations } from '../data/demo'
 import type { Venue, Match } from '../types'
 
 interface Props {
@@ -10,11 +9,9 @@ interface Props {
 }
 
 export default function VenueDetailScreen({ venue, onBack, onMatchClick }: Props) {
-  const { matches, reminders } = useApp()
+  const { matches, reminders, venueMatches } = useApp()
 
-  const relatedMatchIds = Object.entries(venueMatchRelations)
-    .filter(([vId]) => vId === venue.id)
-    .flatMap(([, mIds]) => mIds)
+  const relatedMatchIds = venueMatches[venue.id] ?? []
 
   const relatedMatches = matches.filter(m => relatedMatchIds.includes(m.id))
 

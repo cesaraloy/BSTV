@@ -7,12 +7,15 @@ interface AppContextType {
   matches: Match[]
   venues: Venue[]
   teams: Team[]
+  venueMatches: Record<string, string[]>
   reminders: Set<string>
   theme: 'dark' | 'light'
   user: AuthUser | null
+  loading: boolean
   setUser: (user: AuthUser | null) => void
   toggleReminder: (matchId: string) => void
   toggleTeam: (teamId: string) => void
+  saveTeams: (teams: Team[]) => void
   toggleTheme: () => void
 }
 

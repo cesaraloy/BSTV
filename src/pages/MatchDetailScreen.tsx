@@ -1,6 +1,6 @@
 import { ArrowLeft, Bell, MapPin, ChevronRight } from 'lucide-react'
 import { useApp } from '../lib/context'
-import { competitionEmojis, venueMatchRelations } from '../data/demo'
+import { competitionEmojis } from '../data/demo'
 import type { Match, Venue } from '../types'
 
 interface Props {
@@ -10,10 +10,10 @@ interface Props {
 }
 
 export default function MatchDetailScreen({ match, onBack, onVenueClick }: Props) {
-  const { reminders, toggleReminder, venues } = useApp()
+  const { reminders, toggleReminder, venues, venueMatches } = useApp()
   const reminderActive = reminders.has(match.id)
 
-  const relatedVenueIds = venueMatchRelations[match.id] ?? []
+  const relatedVenueIds = venueMatches[match.id] ?? []
   const relatedVenues = venues.filter(v => relatedVenueIds.includes(v.id))
   const emoji = competitionEmojis[match.competition] ?? '🏆'
 

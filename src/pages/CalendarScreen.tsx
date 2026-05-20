@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function CalendarScreen({ onMatchClick }: Props) {
-  const { matches, reminders, toggleReminder } = useApp()
+  const { matches, reminders, toggleReminder, loading } = useApp()
   const [activeFilter, setActiveFilter] = useState('Todos')
 
   const filtered = matches.filter(m => {
@@ -59,9 +59,20 @@ export default function CalendarScreen({ onMatchClick }: Props) {
 
       {/* Scroll area */}
       <div className="flex-1 overflow-y-auto px-5 pb-28">
-        <p className="text-xs font-bold text-brand-muted uppercase tracking-widest mt-4 mb-3">
-          Próximos partidos
-        </p>
+        <div className="flex items-center justify-between mt-4 mb-3">
+          <p className="text-xs font-bold text-brand-muted uppercase tracking-widest">
+            Próximos partidos
+          </p>
+          {loading && (
+            <div className="flex items-center gap-1.5 text-brand-muted">
+              <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+              </svg>
+              <span className="text-[10px]">Actualizando</span>
+            </div>
+          )}
+        </div>
 
         <div className="flex flex-col gap-3">
           {filtered.map(match => (

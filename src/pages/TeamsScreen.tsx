@@ -28,7 +28,7 @@ const competitionKey: Record<string, string> = {
 }
 
 export default function TeamsScreen({ onBack }: Props) {
-  const { teams, toggleTeam } = useApp()
+  const { teams, toggleTeam, saveTeams } = useApp()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('Todos')
   const [saved, setSaved] = useState(false)
@@ -41,6 +41,7 @@ export default function TeamsScreen({ onBack }: Props) {
   })
 
   const handleSave = () => {
+    saveTeams(teams)
     setSaved(true)
     setTimeout(() => { setSaved(false); onBack() }, 1000)
   }

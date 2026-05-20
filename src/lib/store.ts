@@ -1,40 +1,104 @@
-import { useState, useCallback, useEffect } from 'react'
-import { demoMatches, demoTeams, demoVenues } from '../data/demo'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { demoMatches, demoTeams, demoVenues, venueMatchRelations as demoVenueMatchRelations } from '../data/demo'
+import {
+  fetchMatches, fetchVenues, fetchTeams, fetchAllVenueMatches,
+  fetchUserReminders, fetchUserFollowedTeamIds,
+  upsertReminder, upsertFollowedTeam, saveAllFollowedTeams,
+} from './supabase'
 import type { Match, Team, Venue } from '../types'
 import type { AuthUser } from './auth'
 
-export const initialReminders = new Set(['5'])
-
 export function useAppStore() {
-  const [matches] = useState<Match[]>(demoMatches)
-  const [venues] = useState<Venue[]>(demoVenues)
+  const [matches, setMatches] = useState<Match[]>(demoMatches)
+  const [venues, setVenues] = useState<Venue[]>(demoVenues)
   const [teams, setTeams] = useState<Team[]>(demoTeams)
-  const [reminders, setReminders] = useState<Set<string>>(initialReminders)
+  const [venueMatches, setVenueMatches] = useState<Record<string, string[]>>(demoVenueMatchRelations)
+  const [reminders, setReminders] = useState<Set<string>>(new Set(['5']))
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
-  const [user, setUser] = useState<AuthUser | null>(null)
+  const [user, setUserState] = useState<AuthUser | null>(null)
+  const [loading, setLoading] = useState(true)
+  const userRef = useRef<AuthUser | null>(null)
+
+  // ── Load public data on mount ────────────────────────────────────
+  useEffect(() => {
+    async function loadPublicData() {
+      const [m, v, t, vm] = await Promise.all([
+        fetchMatches(),
+        fetchVenues(),
+        fetchTeams(),
+        fetchAllVenueMatches(),
+      ])
+      // Only replace demo data if Supabase has rows
+      if (m && m.length > 0) setMatches(m)
+      if (v && v.length > 0) setVenues(v)
+      if (t && t.length > 0) setTeams(prev =>
+        t.map(team => ({ ...team, enabled: prev.find(p => p.id === team.id)?.enabled ?? false }))
+      )
+      if (vm && Object.keys(vm).length > 0) setVenueMatches(vm)
+      setLoading(false)
+    }
+    loadPublicData()
+  }, [])
+
+  // ── Load user-specific data when user logs in ────────────────────
+  useEffect(() => {
+    if (!user) return
+    async function loadUserData() {
+      const [userReminders, followedTeamIds] = await Promise.all([
+        fetchUserReminders(user!.id),
+        fetchUserFollowedTeamIds(user!.id),
+      ])
+      if (userReminders.size > 0) setReminders(userReminders)
+      if (followedTeamIds.size > 0) {
+        setTeams(prev => prev.map(t => ({ ...t, enabled: followedTeamIds.has(t.id) })))
+      }
+    }
+    loadUserData()
+  }, [user?.id])
 
   useEffect(() => {
     document.documentElement.classList.toggle('light', theme === 'light')
   }, [theme])
 
+  // ── Actions ──────────────────────────────────────────────────────
+  const setUser = useCallback((u: AuthUser | null) => {
+    userRef.current = u
+    setUserState(u)
+  }, [])
+
   const toggleReminder = useCallback((matchId: string) => {
     setReminders(prev => {
       const next = new Set(prev)
-      if (next.has(matchId)) next.delete(matchId)
-      else next.add(matchId)
+      const nowEnabled = !next.has(matchId)
+      nowEnabled ? next.add(matchId) : next.delete(matchId)
+      // Persist in background
+      if (userRef.current) upsertReminder(userRef.current.id, matchId, nowEnabled)
       return next
     })
   }, [])
 
   const toggleTeam = useCallback((teamId: string) => {
-    setTeams(prev =>
-      prev.map(t => t.id === teamId ? { ...t, enabled: !t.enabled } : t)
-    )
+    setTeams(prev => {
+      const next = prev.map(t => t.id === teamId ? { ...t, enabled: !t.enabled } : t)
+      // Persist in background
+      const team = next.find(t => t.id === teamId)
+      if (userRef.current && team) upsertFollowedTeam(userRef.current.id, teamId, team.enabled)
+      return next
+    })
+  }, [])
+
+  const saveTeams = useCallback((updatedTeams: Team[]) => {
+    setTeams(updatedTeams)
+    if (userRef.current) saveAllFollowedTeams(userRef.current.id, updatedTeams)
   }, [])
 
   const toggleTheme = useCallback(() => {
     setTheme(t => t === 'dark' ? 'light' : 'dark')
   }, [])
 
-  return { matches, venues, teams, reminders, theme, user, setUser, toggleReminder, toggleTeam, toggleTheme }
+  return {
+    matches, venues, teams, venueMatches,
+    reminders, theme, user, loading,
+    setUser, toggleReminder, toggleTeam, saveTeams, toggleTheme,
+  }
 }
