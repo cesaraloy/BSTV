@@ -145,7 +145,7 @@ export default function HomeScreen({ onMatchClick, onAllMatchesClick, onMapClick
 }
 
 // ── Ad banner ─────────────────────────────────────────────────────
-const AD_IMAGE_URL = '' // ← pega aquí la URL de tu imagen en Supabase Storage
+const AD_IMAGE_URL = 'https://wgkxsvgutyzcsfsexgpn.supabase.co/storage/v1/object/public/images/banner.png' // ← pega aquí la URL de tu imagen en Supabase Storage
 
 function AdBanner() {
   if (!AD_IMAGE_URL) return null
