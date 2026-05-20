@@ -61,11 +61,14 @@ export async function getSession(): Promise<AuthUser | null> {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session?.user) return null
 
-  return {
+  const user: AuthUser = {
     id: session.user.id,
     phone: session.user.phone ?? undefined,
     email: session.user.email ?? undefined,
   }
+  // Ensure public.users record exists on every session restore
+  await upsertUser(user.id, { phone: user.phone, email: user.email })
+  return user
 }
 
 // Listen to auth state changes (email magic link redirect, etc.)

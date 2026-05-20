@@ -36,6 +36,9 @@ export default function HomeScreen({ onMatchClick, onAllMatchesClick, onMapClick
         <h1 className="text-xl font-bold text-brand-text">{greeting}</h1>
       </div>
 
+      {/* Ad banner — replace src with your image URL from Supabase Storage */}
+      <AdBanner />
+
       {/* Featured match */}
       {featuredMatch && (
         <div className="px-5 mb-5">
@@ -137,6 +140,23 @@ export default function HomeScreen({ onMatchClick, onAllMatchesClick, onMapClick
           <span className="text-sm font-semibold text-brand-text">Buscar bar</span>
         </button>
       </div>
+    </div>
+  )
+}
+
+// ── Ad banner ─────────────────────────────────────────────────────
+const AD_IMAGE_URL = '' // ← pega aquí la URL de tu imagen en Supabase Storage
+
+function AdBanner() {
+  if (!AD_IMAGE_URL) return null
+  return (
+    <div className="px-5 mb-5">
+      <img
+        src={AD_IMAGE_URL}
+        alt="Publicidad"
+        className="w-full rounded-2xl object-cover"
+        style={{ maxHeight: 120 }}
+      />
     </div>
   )
 }

@@ -81,9 +81,12 @@ export async function fetchUserFollowedTeamIds(userId: string): Promise<Set<stri
 
 // ─── User actions ──────────────────────────────────────────────────
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export async function upsertReminder(userId: string, matchId: string, enabled: boolean) {
   if (!supabase) return
-  // reminder_time = 30 min before match (simplified: now for demo)
+  // Skip demo data with non-UUID IDs (e.g. '1', '2', '5')
+  if (!UUID_RE.test(matchId)) return
   const reminderTime = new Date(Date.now() + 30 * 60 * 1000).toISOString()
   const { error } = await supabase
     .from('reminders')
