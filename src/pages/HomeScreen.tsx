@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function HomeScreen({ onMatchClick, onAllMatchesClick, onMapClick }: Props) {
-  const { matches, teams, reminders, toggleReminder, user } = useApp()
+  const { matches, teams, reminders, toggleReminder, user, userProfile } = useApp()
 
   const todayMatches  = matches.filter(m => m.match_date === 'HOY')
   const featuredMatch = matches.find(m => m.is_featured) ?? todayMatches[0] ?? matches[0]
@@ -25,9 +25,8 @@ export default function HomeScreen({ onMatchClick, onAllMatchesClick, onMapClick
     .filter(m => followedNames.has(m.home_team) || followedNames.has(m.away_team))
     .slice(0, 4)
 
-  const greeting = user?.email
-    ? `Hola, ${user.email.split('@')[0]} 👋`
-    : 'Bienvenido 👋'
+  const displayName = userProfile.name || user?.email?.split('@')[0] || user?.phone || null
+  const greeting = displayName ? `Hola, ${displayName} 👋` : 'Bienvenido 👋'
 
   return (
     <div className="flex flex-col h-full overflow-y-auto pb-28">

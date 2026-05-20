@@ -10,6 +10,16 @@ import { requestPermission, subscribeToPush, scheduleLocalNotification } from '.
 import type { Match, Team, Venue } from '../types'
 import type { AuthUser } from './auth'
 
+// ─── localStorage helpers for team preferences ────────────────────
+function loadFollowedLocal(): Set<string> {
+  try { return new Set(JSON.parse(localStorage.getItem('bstv-followed-teams') ?? '[]')) }
+  catch { return new Set() }
+}
+function saveFollowedLocal(teams: Team[]) {
+  const ids = teams.filter(t => t.enabled).map(t => t.id)
+  localStorage.setItem('bstv-followed-teams', JSON.stringify(ids))
+}
+
 export function useAppStore() {
   const [matches, setMatches] = useState<Match[]>(demoMatches)
   const [venues, setVenues] = useState<Venue[]>(demoVenues)
@@ -44,9 +54,13 @@ export function useAppStore() {
       // Only replace demo data if Supabase has rows
       if (m && m.length > 0) { setMatches(m); matchesRef.current = m }
       if (v && v.length > 0) setVenues(v)
-      if (t && t.length > 0) setTeams(prev =>
-        t.map(team => ({ ...team, enabled: prev.find(p => p.id === team.id)?.enabled ?? false }))
-      )
+      const localFollowed = loadFollowedLocal()
+      if (t && t.length > 0) {
+        setTeams(t.map(team => ({ ...team, enabled: localFollowed.has(team.id) })))
+      } else if (localFollowed.size > 0) {
+        // demo teams: restore enabled state from localStorage
+        setTeams(prev => prev.map(team => ({ ...team, enabled: localFollowed.has(team.id) })))
+      }
       if (vm && Object.keys(vm).length > 0) setVenueMatches(vm)
       setLoading(false)
     }
@@ -63,8 +77,11 @@ export function useAppStore() {
         fetchUserProfile(user!.id),
       ])
       if (userReminders.size > 0) setReminders(userReminders)
-      if (followedTeamIds.size > 0) {
-        setTeams(prev => prev.map(t => ({ ...t, enabled: followedTeamIds.has(t.id) })))
+      // Merge: Supabase wins if it has data, otherwise keep localStorage state
+      const localFollowed = loadFollowedLocal()
+      const followed = followedTeamIds.size > 0 ? followedTeamIds : localFollowed
+      if (followed.size > 0) {
+        setTeams(prev => prev.map(t => ({ ...t, enabled: followed.has(t.id) })))
       }
       if (profile) {
         setUserProfile({ name: profile.name ?? '', location: profile.default_location ?? 'Madrid, España' })
@@ -114,7 +131,7 @@ export function useAppStore() {
   const toggleTeam = useCallback((teamId: string) => {
     setTeams(prev => {
       const next = prev.map(t => t.id === teamId ? { ...t, enabled: !t.enabled } : t)
-      // Persist in background
+      saveFollowedLocal(next)
       const team = next.find(t => t.id === teamId)
       if (userRef.current && team) upsertFollowedTeam(userRef.current.id, teamId, team.enabled)
       return next
@@ -123,6 +140,7 @@ export function useAppStore() {
 
   const saveTeams = useCallback((updatedTeams: Team[]) => {
     setTeams(updatedTeams)
+    saveFollowedLocal(updatedTeams)
     if (userRef.current) saveAllFollowedTeams(userRef.current.id, updatedTeams)
   }, [])
 
