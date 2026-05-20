@@ -12,7 +12,7 @@ interface Props {
 
 export default function Logo({ size = 'md', className = '' }: Props) {
   const { theme } = useApp()
-  const src = theme === 'light' ? LOGO_LIGHT : LOGO_DARK
+  const src = theme === 'light' ? LOGO_DARK : LOGO_LIGHT
   return (
     <img
       src={src}

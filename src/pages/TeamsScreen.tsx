@@ -3,13 +3,14 @@ import { ArrowLeft, Search, Check } from 'lucide-react'
 import { useApp } from '../lib/context'
 import TeamLogo from '../components/TeamLogo'
 
-const COMPETITION_FILTERS = ['Todos', 'Hypermotion', 'Champions', 'Europa', "Women's CL", 'MotoGP', 'F1']
+const COMPETITION_FILTERS = ['Todos', 'LaLiga', 'Hypermotion', 'Champions', 'Europa', "Women's CL", 'MotoGP', 'F1']
 
 interface Props {
   onBack: () => void
 }
 
 const competitionKey: Record<string, string> = {
+  'LaLiga': 'LaLiga',
   'Hypermotion': 'LaLiga Hypermotion',
   'Champions': 'Champions League',
   'Europa': 'Europa League',
