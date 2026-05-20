@@ -92,10 +92,22 @@ export async function fetchUserProfile(userId: string): Promise<{ name: string; 
   return data
 }
 
-export async function updateUserProfile(userId: string, fields: { name?: string; default_location?: string }) {
+export async function updateUserProfile(userId: string, fields: { name?: string; default_location?: string; avatar_url?: string }) {
   if (!supabase) return
   const { error } = await supabase.from('users').update(fields).eq('id', userId)
   if (error) console.error('updateUserProfile:', error.message)
+}
+
+export async function uploadAvatar(userId: string, file: File): Promise<string | null> {
+  if (!supabase) return null
+  const ext = file.name.split('.').pop() ?? 'jpg'
+  const path = `avatars/${userId}.${ext}`
+  const { error } = await supabase.storage
+    .from('images')
+    .upload(path, file, { upsert: true, contentType: file.type })
+  if (error) { console.error('uploadAvatar:', error.message); return null }
+  const { data } = supabase.storage.from('images').getPublicUrl(path)
+  return data.publicUrl
 }
 
 // ─── User actions ──────────────────────────────────────────────────

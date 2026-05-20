@@ -55,6 +55,7 @@ export function scheduleLocalNotification(
   awayTeam: string,
   matchTime: string,
   matchDate: string,
+  advanceMinutes = 30,
 ) {
   if (Notification.permission !== 'granted') return
   const now = new Date()
@@ -66,12 +67,11 @@ export function scheduleLocalNotification(
     day = new Date(now.getFullYear(), mm - 1, dd)
   }
   day.setHours(h, m, 0, 0)
-  const delay = day.getTime() - 30 * 60 * 1000 - Date.now()
-  // Only schedule if within the next 24 h (page is likely still open)
+  const delay = day.getTime() - advanceMinutes * 60 * 1000 - Date.now()
   if (delay <= 0 || delay > 24 * 60 * 60 * 1000) return
   setTimeout(() => {
     new Notification(`⚽ ${homeTeam} vs ${awayTeam}`, {
-      body: 'El partido empieza en 30 minutos',
+      body: `El partido empieza en ${advanceMinutes} minutos`,
       icon: '/favicon.svg',
       tag: `match-${matchId}`,
     })

@@ -1,21 +1,31 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import type React from 'react'
-import { ChevronRight, LogOut, MapPin, Bell, Sun, Moon, Check, Edit3, X } from 'lucide-react'
+import { ChevronRight, LogOut, MapPin, Bell, Sun, Moon, Check, Edit3, X, HelpCircle, Camera } from 'lucide-react'
 import Logo from '../components/Logo'
 import { useApp } from '../lib/context'
 
 interface Props {
   onTeamsClick: () => void
+  onFAQClick: () => void
   onSignOut?: () => void
   userPhone?: string
   userEmail?: string
 }
 
-export default function ProfileScreen({ onTeamsClick, onSignOut, userPhone, userEmail }: Props) {
-  const { theme, toggleTheme, reminders, teams, userProfile, saveProfile } = useApp()
+const ADVANCE_OPTIONS = [
+  { label: '15 min', value: 15 },
+  { label: '30 min', value: 30 },
+  { label: '1 hora', value: 60 },
+]
+
+export default function ProfileScreen({ onTeamsClick, onFAQClick, onSignOut, userPhone, userEmail }: Props) {
+  const { theme, toggleTheme, reminders, teams, userProfile, avatarUrl, notifAdvance, saveProfile, setNotifAdvance, updateAvatarFromFile } = useApp()
   const [editing, setEditing] = useState(false)
   const [draftName, setDraftName] = useState('')
   const [draftCity, setDraftCity] = useState('')
+  const [showNotifPicker, setShowNotifPicker] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const followedCount = teams.filter(t => t.enabled).length
   const reminderCount = reminders.size
@@ -29,13 +39,17 @@ export default function ProfileScreen({ onTeamsClick, onSignOut, userPhone, user
     setEditing(true)
   }
 
-  function cancelEdit() {
-    setEditing(false)
-  }
-
   function confirmEdit() {
     saveProfile(draftName.trim() || displayName, draftCity.trim() || displayCity)
     setEditing(false)
+  }
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    await updateAvatarFromFile(file)
+    setUploading(false)
   }
 
   return (
@@ -47,7 +61,7 @@ export default function ProfileScreen({ onTeamsClick, onSignOut, userPhone, user
           {editing ? (
             <div className="flex items-center gap-2">
               <button
-                onClick={cancelEdit}
+                onClick={() => setEditing(false)}
                 className="w-9 h-9 rounded-full bg-brand-card border border-brand-border flex items-center justify-center"
               >
                 <X size={16} className="text-brand-muted" />
@@ -74,8 +88,28 @@ export default function ProfileScreen({ onTeamsClick, onSignOut, userPhone, user
       <div className="flex flex-col items-center px-5 pb-5">
         <div className="relative mb-3">
           <div className="w-24 h-24 rounded-full bg-gradient-to-b from-blue-600 to-brand-navy flex items-center justify-center border-2 border-brand-blue shadow-lg overflow-hidden">
-            <Avatar3D />
+            {avatarUrl
+              ? <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              : <Avatar3D />}
+            {uploading && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
           </div>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="absolute bottom-0 right-0 w-7 h-7 bg-brand-navy rounded-full flex items-center justify-center border-2 border-brand-bg"
+          >
+            <Camera size={12} className="text-white" />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarChange}
+          />
         </div>
 
         {editing ? (
@@ -106,9 +140,6 @@ export default function ProfileScreen({ onTeamsClick, onSignOut, userPhone, user
             <div className="flex items-center gap-1.5 mt-1 text-xs text-brand-muted">
               <MapPin size={11} />
               <span>{displayCity}</span>
-            </div>
-            <div className="mt-2 px-3 py-1 bg-brand-navy rounded-full">
-              <Logo size="sm" />
             </div>
           </>
         )}
@@ -149,56 +180,82 @@ export default function ProfileScreen({ onTeamsClick, onSignOut, userPhone, user
         <p className="text-xs font-bold text-brand-muted uppercase tracking-widest mt-1 mb-1">Ajustes</p>
 
         <div className="bg-brand-card border border-brand-border rounded-2xl overflow-hidden">
-          {/* Notifications row */}
-          <SettingsRow icon={<Bell size={17} className="text-brand-muted" />} label="Notificaciones">
-            <span className="text-xs text-brand-muted">Activadas</span>
-            <ChevronRight size={15} className="text-brand-muted shrink-0" />
-          </SettingsRow>
+          {/* Notifications */}
+          <button
+            onClick={() => setShowNotifPicker(p => !p)}
+            className="w-full flex items-center gap-3 px-4 py-3.5 active:bg-brand-border/30 transition-colors"
+          >
+            <Bell size={17} className="text-brand-muted shrink-0" />
+            <span className="flex-1 text-sm text-brand-text text-left">Notificaciones</span>
+            <span className="text-xs text-brand-muted">
+              {ADVANCE_OPTIONS.find(o => o.value === notifAdvance)?.label ?? '30 min'} antes
+            </span>
+            <ChevronRight size={15} className={`text-brand-muted shrink-0 transition-transform ${showNotifPicker ? 'rotate-90' : ''}`} />
+          </button>
+
+          {showNotifPicker && (
+            <div className="px-4 pb-4 flex gap-2">
+              {ADVANCE_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => { setNotifAdvance(opt.value); setShowNotifPicker(false) }}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors border ${
+                    notifAdvance === opt.value
+                      ? 'bg-brand-navy border-brand-blue text-white'
+                      : 'bg-brand-accent border-brand-border text-brand-muted'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           <Divider />
 
           {/* Theme toggle */}
-          <SettingsRow
-            icon={theme === 'dark'
-              ? <Moon size={17} className="text-brand-blue" />
-              : <Sun size={17} className="text-brand-blue" />}
-            label="Apariencia"
+          <button
             onClick={toggleTheme}
+            className="w-full flex items-center gap-3 px-4 py-3.5 active:bg-brand-border/30 transition-colors"
           >
+            {theme === 'dark'
+              ? <Moon size={17} className="text-brand-blue shrink-0" />
+              : <Sun size={17} className="text-brand-blue shrink-0" />}
+            <span className="flex-1 text-sm text-brand-text text-left">Apariencia</span>
             <span className="text-xs text-brand-muted">{theme === 'dark' ? 'Oscuro' : 'Claro'}</span>
             <div className={`w-11 h-6 rounded-full relative transition-colors ${theme === 'light' ? 'bg-brand-navy' : 'bg-brand-border'}`}>
               <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${theme === 'light' ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
             </div>
-          </SettingsRow>
+          </button>
+
+          <Divider />
+
+          {/* FAQ */}
+          <button
+            onClick={onFAQClick}
+            className="w-full flex items-center gap-3 px-4 py-3.5 active:bg-brand-border/30 transition-colors"
+          >
+            <HelpCircle size={17} className="text-brand-muted shrink-0" />
+            <span className="flex-1 text-sm text-brand-text text-left">Preguntas frecuentes</span>
+            <ChevronRight size={15} className="text-brand-muted shrink-0" />
+          </button>
+        </div>
+
+        {/* App logo */}
+        <div className="flex justify-center py-2 opacity-40">
+          <Logo size="sm" />
         </div>
 
         {/* Logout */}
         <button
           onClick={onSignOut}
-          className="w-full bg-brand-card border border-red-900/40 rounded-2xl p-4 flex items-center justify-center gap-2 mt-2 active:scale-[0.98] transition-transform"
+          className="w-full bg-brand-card border border-red-900/40 rounded-2xl p-4 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
         >
           <LogOut size={18} className="text-red-400" />
           <span className="text-sm font-semibold text-red-400">Cerrar sesión</span>
         </button>
       </div>
     </div>
-  )
-}
-
-function SettingsRow({ icon, label, onClick, children }: {
-  icon: React.ReactNode
-  label: string
-  onClick?: () => void
-  children?: React.ReactNode
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="w-full flex items-center gap-3 px-4 py-3.5 active:bg-brand-border/30 transition-colors"
-    >
-      <span className="shrink-0">{icon}</span>
-      <span className="flex-1 text-sm text-brand-text text-left">{label}</span>
-      <div className="flex items-center gap-2">{children}</div>
-    </button>
   )
 }
 

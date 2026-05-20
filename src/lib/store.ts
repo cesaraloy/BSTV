@@ -4,7 +4,7 @@ import {
   fetchMatches, fetchVenues, fetchTeams, fetchAllVenueMatches,
   fetchUserReminders, fetchUserFollowedTeamIds,
   upsertReminder, upsertFollowedTeam, saveAllFollowedTeams,
-  fetchUserProfile, updateUserProfile,
+  fetchUserProfile, updateUserProfile, uploadAvatar,
 } from './supabase'
 import { requestPermission, subscribeToPush, scheduleLocalNotification } from './notifications'
 import type { Match, Team, Venue } from '../types'
@@ -21,9 +21,14 @@ export function useAppStore() {
   )
   const [user, setUserState] = useState<AuthUser | null>(null)
   const [userProfile, setUserProfile] = useState<{ name: string; location: string }>({ name: '', location: 'Madrid, España' })
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [notifAdvance, setNotifAdvanceState] = useState<number>(
+    () => parseInt(localStorage.getItem('bstv-notif-advance') ?? '30')
+  )
   const [loading, setLoading] = useState(true)
   const userRef = useRef<AuthUser | null>(null)
   const matchesRef = useRef<Match[]>(demoMatches)
+  const notifAdvanceRef = useRef<number>(parseInt(localStorage.getItem('bstv-notif-advance') ?? '30'))
 
   // ── Load public data on mount ────────────────────────────────────
   useEffect(() => {
@@ -61,6 +66,7 @@ export function useAppStore() {
       }
       if (profile) {
         setUserProfile({ name: profile.name ?? '', location: profile.default_location ?? 'Madrid, España' })
+        if (profile.avatar_url) setAvatarUrl(profile.avatar_url)
       }
     }
     loadUserData()
@@ -97,7 +103,7 @@ export function useAppStore() {
           if (permission !== 'granted') return
           if (userRef.current) await subscribeToPush(userRef.current.id)
           const match = matchesRef.current.find(m => m.id === matchId)
-          if (match) scheduleLocalNotification(matchId, match.home_team, match.away_team, match.match_time, match.match_date)
+          if (match) scheduleLocalNotification(matchId, match.home_team, match.away_team, match.match_time, match.match_date, notifAdvanceRef.current)
         })
       }
       return next
@@ -132,9 +138,24 @@ export function useAppStore() {
     if (userRef.current) updateUserProfile(userRef.current.id, { name, default_location: location })
   }, [])
 
+  const setNotifAdvance = useCallback((minutes: number) => {
+    notifAdvanceRef.current = minutes
+    setNotifAdvanceState(minutes)
+    localStorage.setItem('bstv-notif-advance', String(minutes))
+  }, [])
+
+  const updateAvatarFromFile = useCallback(async (file: File) => {
+    if (!userRef.current) return
+    const url = await uploadAvatar(userRef.current.id, file)
+    if (!url) return
+    setAvatarUrl(url)
+    updateUserProfile(userRef.current.id, { avatar_url: url })
+  }, [])
+
   return {
     matches, venues, teams, venueMatches,
-    reminders, theme, user, userProfile, loading,
+    reminders, theme, user, userProfile, avatarUrl, notifAdvance, loading,
     setUser, toggleReminder, toggleTeam, saveTeams, toggleTheme, saveProfile,
+    setNotifAdvance, updateAvatarFromFile,
   }
 }

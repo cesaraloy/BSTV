@@ -12,6 +12,8 @@ interface AppContextType {
   theme: 'dark' | 'light'
   user: AuthUser | null
   userProfile: { name: string; location: string }
+  avatarUrl: string | null
+  notifAdvance: number
   loading: boolean
   setUser: (user: AuthUser | null) => void
   toggleReminder: (matchId: string) => void
@@ -19,6 +21,8 @@ interface AppContextType {
   saveTeams: (teams: Team[]) => void
   toggleTheme: () => void
   saveProfile: (name: string, location: string) => void
+  setNotifAdvance: (minutes: number) => void
+  updateAvatarFromFile: (file: File) => Promise<void>
 }
 
 const AppContext = createContext<AppContextType | null>(null)

@@ -8,6 +8,7 @@ import CalendarScreen from './pages/CalendarScreen'
 import MapScreen from './pages/MapScreen'
 import ProfileScreen from './pages/ProfileScreen'
 import TeamsScreen from './pages/TeamsScreen'
+import FAQScreen from './pages/FAQScreen'
 import MatchDetailScreen from './pages/MatchDetailScreen'
 import VenueDetailScreen from './pages/VenueDetailScreen'
 import LoginScreen from './pages/LoginScreen'
@@ -22,6 +23,7 @@ type Screen =
   | { type: 'match-detail'; match: Match }
   | { type: 'venue-detail'; venue: Venue; from?: Tab }
   | { type: 'teams' }
+  | { type: 'faq' }
 
 type AuthStep =
   | { step: 'loading' }
@@ -131,6 +133,7 @@ function AppInner() {
     if (screen.type === 'match-detail') setScreen({ type: 'tab', tab: activeTab })
     else if (screen.type === 'venue-detail') setScreen({ type: 'tab', tab: screen.from ?? activeTab })
     else if (screen.type === 'teams') setScreen({ type: 'tab', tab: 'profile' })
+    else if (screen.type === 'faq') setScreen({ type: 'tab', tab: 'profile' })
   }
 
   const handleTabChange = (tab: Tab) => {
@@ -160,6 +163,7 @@ function AppInner() {
         {screen.type === 'tab' && screen.tab === 'profile' && (
           <ProfileScreen
             onTeamsClick={() => navigate({ type: 'teams' })}
+            onFAQClick={() => navigate({ type: 'faq' })}
             onSignOut={handleSignOut}
             userPhone={user?.phone}
             userEmail={user?.email}
@@ -180,6 +184,7 @@ function AppInner() {
           />
         )}
         {screen.type === 'teams' && <TeamsScreen onBack={goBack} />}
+        {screen.type === 'faq' && <FAQScreen onBack={goBack} />}
       </div>
       {showNav && <BottomNav active={activeTab} onChange={handleTabChange} />}
     </div>
