@@ -1,4 +1,6 @@
-import { ChevronRight, Edit3, LogOut, MapPin, Bell, Settings, HelpCircle, Shield, FileText, Sun, Moon } from 'lucide-react'
+import { useState } from 'react'
+import type React from 'react'
+import { ChevronRight, LogOut, MapPin, Bell, Sun, Moon, Check, Edit3, X } from 'lucide-react'
 import Logo from '../components/Logo'
 import { useApp } from '../lib/context'
 
@@ -10,22 +12,31 @@ interface Props {
 }
 
 export default function ProfileScreen({ onTeamsClick, onSignOut, userPhone, userEmail }: Props) {
-  const { theme, toggleTheme } = useApp()
+  const { theme, toggleTheme, reminders, teams, userProfile, saveProfile } = useApp()
+  const [editing, setEditing] = useState(false)
+  const [draftName, setDraftName] = useState('')
+  const [draftCity, setDraftCity] = useState('')
 
-  const settingsItems = [
-    { icon: MapPin, label: 'Ubicación predeterminada', value: 'Madrid, España', action: undefined },
-    { icon: Bell, label: 'Notificaciones', value: '', action: undefined },
-    {
-      icon: theme === 'dark' ? Moon : Sun,
-      label: 'Modo de apariencia',
-      value: theme === 'dark' ? 'Oscuro' : 'Claro',
-      action: toggleTheme,
-    },
-    { icon: Settings, label: 'Ajustes de la aplicación', value: '', action: undefined },
-    { icon: HelpCircle, label: 'Ayuda y soporte', value: '', action: undefined },
-    { icon: Shield, label: 'Política de privacidad', value: '', action: undefined },
-    { icon: FileText, label: 'Términos y condiciones', value: '', action: undefined },
-  ]
+  const followedCount = teams.filter(t => t.enabled).length
+  const reminderCount = reminders.size
+
+  const displayName = userProfile.name || userEmail?.split('@')[0] || userPhone || 'Usuario'
+  const displayCity = userProfile.location || 'Madrid, España'
+
+  function startEdit() {
+    setDraftName(userProfile.name || displayName)
+    setDraftCity(displayCity)
+    setEditing(true)
+  }
+
+  function cancelEdit() {
+    setEditing(false)
+  }
+
+  function confirmEdit() {
+    saveProfile(draftName.trim() || displayName, draftCity.trim() || displayCity)
+    setEditing(false)
+  }
 
   return (
     <div className="flex flex-col h-full overflow-y-auto pb-28">
@@ -33,30 +44,89 @@ export default function ProfileScreen({ onTeamsClick, onSignOut, userPhone, user
       <div className="pt-14 px-5 pb-4 bg-brand-bg">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-brand-text tracking-tight">Perfil</h1>
-          <button className="w-9 h-9 rounded-full bg-brand-card border border-brand-border flex items-center justify-center">
-            <Edit3 size={16} className="text-brand-text" />
-          </button>
+          {editing ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={cancelEdit}
+                className="w-9 h-9 rounded-full bg-brand-card border border-brand-border flex items-center justify-center"
+              >
+                <X size={16} className="text-brand-muted" />
+              </button>
+              <button
+                onClick={confirmEdit}
+                className="w-9 h-9 rounded-full bg-brand-navy flex items-center justify-center"
+              >
+                <Check size={16} className="text-white" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={startEdit}
+              className="w-9 h-9 rounded-full bg-brand-card border border-brand-border flex items-center justify-center"
+            >
+              <Edit3 size={16} className="text-brand-text" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Avatar + user info */}
-      <div className="flex flex-col items-center px-5 pb-6">
+      <div className="flex flex-col items-center px-5 pb-5">
         <div className="relative mb-3">
           <div className="w-24 h-24 rounded-full bg-gradient-to-b from-blue-600 to-brand-navy flex items-center justify-center border-2 border-brand-blue shadow-lg overflow-hidden">
             <Avatar3D />
           </div>
-          <div className="absolute bottom-0 right-0 w-7 h-7 bg-brand-navy rounded-full flex items-center justify-center border-2 border-brand-bg">
-            <Edit3 size={12} className="text-white" />
+        </div>
+
+        {editing ? (
+          <div className="w-full max-w-xs flex flex-col gap-2 mt-1">
+            <input
+              autoFocus
+              value={draftName}
+              onChange={e => setDraftName(e.target.value)}
+              placeholder="Tu nombre"
+              className="w-full bg-brand-card border border-brand-blue rounded-xl px-4 py-2.5 text-center text-base font-bold text-brand-text outline-none"
+            />
+            <div className="flex items-center gap-2 bg-brand-card border border-brand-border rounded-xl px-3 py-2.5">
+              <MapPin size={14} className="text-brand-muted shrink-0" />
+              <input
+                value={draftCity}
+                onChange={e => setDraftCity(e.target.value)}
+                placeholder="Ciudad"
+                className="flex-1 bg-transparent text-sm text-brand-text outline-none text-center"
+              />
+            </div>
+          </div>
+        ) : (
+          <>
+            <p className="text-lg font-bold text-brand-text">{displayName}</p>
+            <p className="text-sm text-brand-muted font-mono mt-0.5">
+              {userEmail ?? userPhone ?? ''}
+            </p>
+            <div className="flex items-center gap-1.5 mt-1 text-xs text-brand-muted">
+              <MapPin size={11} />
+              <span>{displayCity}</span>
+            </div>
+            <div className="mt-2 px-3 py-1 bg-brand-navy rounded-full">
+              <Logo size="sm" />
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Stats strip */}
+      {!editing && (
+        <div className="mx-5 mb-4 grid grid-cols-2 gap-3">
+          <div className="bg-brand-card border border-brand-border rounded-2xl p-4 flex flex-col items-center gap-1">
+            <span className="text-2xl font-black text-brand-blue">{reminderCount}</span>
+            <span className="text-xs text-brand-muted font-medium">Recordatorios</span>
+          </div>
+          <div className="bg-brand-card border border-brand-border rounded-2xl p-4 flex flex-col items-center gap-1">
+            <span className="text-2xl font-black text-brand-blue">{followedCount}</span>
+            <span className="text-xs text-brand-muted font-medium">Equipos seguidos</span>
           </div>
         </div>
-        <p className="text-lg font-bold text-brand-text">Juan Pérez</p>
-        <p className="text-sm text-brand-muted font-mono">
-          {userEmail ?? userPhone ?? 'juanperez@email.com'}
-        </p>
-        <div className="mt-2 px-3 py-1 bg-brand-navy rounded-full">
-          <Logo size="sm" />
-        </div>
-      </div>
+      )}
 
       <div className="px-5 flex flex-col gap-3">
         {/* Teams card */}
@@ -68,38 +138,37 @@ export default function ProfileScreen({ onTeamsClick, onSignOut, userPhone, user
             <span className="text-xl">🏆</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-brand-text">Equipos que estoy siguiendo</p>
-            <p className="text-xs text-brand-muted mt-0.5">Selecciona los equipos que quieres seguir</p>
+            <p className="text-sm font-bold text-brand-text">Equipos que sigo</p>
+            <p className="text-xs text-brand-muted mt-0.5">
+              {followedCount > 0 ? `${followedCount} equipos seleccionados` : 'Selecciona los equipos que quieres seguir'}
+            </p>
           </div>
           <ChevronRight size={18} className="text-brand-muted shrink-0" />
         </button>
 
-        <p className="text-xs font-bold text-brand-muted uppercase tracking-widest mt-2 mb-1">Ajustes</p>
+        <p className="text-xs font-bold text-brand-muted uppercase tracking-widest mt-1 mb-1">Ajustes</p>
 
         <div className="bg-brand-card border border-brand-border rounded-2xl overflow-hidden">
-          {settingsItems.map(({ icon: Icon, label, value, action }, i) => (
-            <div key={label}>
-              <button
-                onClick={action}
-                className="w-full flex items-center gap-3 px-4 py-3.5 active:bg-brand-border/30 transition-colors"
-              >
-                <Icon size={17} className={label === 'Modo de apariencia' ? 'text-brand-blue shrink-0' : 'text-brand-muted shrink-0'} />
-                <span className="flex-1 text-sm text-brand-text text-left">{label}</span>
-                {label === 'Modo de apariencia' ? (
-                  /* Toggle switch */
-                  <div className={`w-11 h-6 rounded-full relative transition-colors ${theme === 'light' ? 'bg-brand-navy' : 'bg-brand-border'}`}>
-                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${theme === 'light' ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
-                  </div>
-                ) : (
-                  <>
-                    {value && <span className="text-xs text-brand-muted">{value}</span>}
-                    <ChevronRight size={15} className="text-brand-muted shrink-0" />
-                  </>
-                )}
-              </button>
-              {i < settingsItems.length - 1 && <div className="ml-12 border-b border-brand-border" />}
+          {/* Notifications row */}
+          <SettingsRow icon={<Bell size={17} className="text-brand-muted" />} label="Notificaciones">
+            <span className="text-xs text-brand-muted">Activadas</span>
+            <ChevronRight size={15} className="text-brand-muted shrink-0" />
+          </SettingsRow>
+          <Divider />
+
+          {/* Theme toggle */}
+          <SettingsRow
+            icon={theme === 'dark'
+              ? <Moon size={17} className="text-brand-blue" />
+              : <Sun size={17} className="text-brand-blue" />}
+            label="Apariencia"
+            onClick={toggleTheme}
+          >
+            <span className="text-xs text-brand-muted">{theme === 'dark' ? 'Oscuro' : 'Claro'}</span>
+            <div className={`w-11 h-6 rounded-full relative transition-colors ${theme === 'light' ? 'bg-brand-navy' : 'bg-brand-border'}`}>
+              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${theme === 'light' ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
             </div>
-          ))}
+          </SettingsRow>
         </div>
 
         {/* Logout */}
@@ -113,6 +182,28 @@ export default function ProfileScreen({ onTeamsClick, onSignOut, userPhone, user
       </div>
     </div>
   )
+}
+
+function SettingsRow({ icon, label, onClick, children }: {
+  icon: React.ReactNode
+  label: string
+  onClick?: () => void
+  children?: React.ReactNode
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-3 px-4 py-3.5 active:bg-brand-border/30 transition-colors"
+    >
+      <span className="shrink-0">{icon}</span>
+      <span className="flex-1 text-sm text-brand-text text-left">{label}</span>
+      <div className="flex items-center gap-2">{children}</div>
+    </button>
+  )
+}
+
+function Divider() {
+  return <div className="ml-12 border-b border-brand-border" />
 }
 
 function Avatar3D() {

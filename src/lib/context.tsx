@@ -11,12 +11,14 @@ interface AppContextType {
   reminders: Set<string>
   theme: 'dark' | 'light'
   user: AuthUser | null
+  userProfile: { name: string; location: string }
   loading: boolean
   setUser: (user: AuthUser | null) => void
   toggleReminder: (matchId: string) => void
   toggleTeam: (teamId: string) => void
   saveTeams: (teams: Team[]) => void
   toggleTheme: () => void
+  saveProfile: (name: string, location: string) => void
 }
 
 const AppContext = createContext<AppContextType | null>(null)

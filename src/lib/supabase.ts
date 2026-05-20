@@ -79,6 +79,25 @@ export async function fetchUserFollowedTeamIds(userId: string): Promise<Set<stri
   return new Set(data.map(r => r.team_id))
 }
 
+// ─── User profile ──────────────────────────────────────────────────
+
+export async function fetchUserProfile(userId: string): Promise<{ name: string; default_location: string; avatar_url: string } | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('users')
+    .select('name, default_location, avatar_url')
+    .eq('id', userId)
+    .single()
+  if (error) { console.error('fetchUserProfile:', error.message); return null }
+  return data
+}
+
+export async function updateUserProfile(userId: string, fields: { name?: string; default_location?: string }) {
+  if (!supabase) return
+  const { error } = await supabase.from('users').update(fields).eq('id', userId)
+  if (error) console.error('updateUserProfile:', error.message)
+}
+
 // ─── User actions ──────────────────────────────────────────────────
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

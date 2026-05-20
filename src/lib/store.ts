@@ -4,6 +4,7 @@ import {
   fetchMatches, fetchVenues, fetchTeams, fetchAllVenueMatches,
   fetchUserReminders, fetchUserFollowedTeamIds,
   upsertReminder, upsertFollowedTeam, saveAllFollowedTeams,
+  fetchUserProfile, updateUserProfile,
 } from './supabase'
 import { requestPermission, subscribeToPush, scheduleLocalNotification } from './notifications'
 import type { Match, Team, Venue } from '../types'
@@ -17,6 +18,7 @@ export function useAppStore() {
   const [reminders, setReminders] = useState<Set<string>>(new Set(['5']))
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [user, setUserState] = useState<AuthUser | null>(null)
+  const [userProfile, setUserProfile] = useState<{ name: string; location: string }>({ name: '', location: 'Madrid, España' })
   const [loading, setLoading] = useState(true)
   const userRef = useRef<AuthUser | null>(null)
   const matchesRef = useRef<Match[]>(demoMatches)
@@ -46,13 +48,17 @@ export function useAppStore() {
   useEffect(() => {
     if (!user) return
     async function loadUserData() {
-      const [userReminders, followedTeamIds] = await Promise.all([
+      const [userReminders, followedTeamIds, profile] = await Promise.all([
         fetchUserReminders(user!.id),
         fetchUserFollowedTeamIds(user!.id),
+        fetchUserProfile(user!.id),
       ])
       if (userReminders.size > 0) setReminders(userReminders)
       if (followedTeamIds.size > 0) {
         setTeams(prev => prev.map(t => ({ ...t, enabled: followedTeamIds.has(t.id) })))
+      }
+      if (profile) {
+        setUserProfile({ name: profile.name ?? '', location: profile.default_location ?? 'Madrid, España' })
       }
     }
     loadUserData()
@@ -115,9 +121,14 @@ export function useAppStore() {
     setTheme(t => t === 'dark' ? 'light' : 'dark')
   }, [])
 
+  const saveProfile = useCallback((name: string, location: string) => {
+    setUserProfile({ name, location })
+    if (userRef.current) updateUserProfile(userRef.current.id, { name, default_location: location })
+  }, [])
+
   return {
     matches, venues, teams, venueMatches,
-    reminders, theme, user, loading,
-    setUser, toggleReminder, toggleTeam, saveTeams, toggleTheme,
+    reminders, theme, user, userProfile, loading,
+    setUser, toggleReminder, toggleTeam, saveTeams, toggleTheme, saveProfile,
   }
 }
