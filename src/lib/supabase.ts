@@ -84,17 +84,25 @@ export async function fetchUserFollowedTeamIds(userId: string): Promise<Set<stri
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export async function upsertReminder(userId: string, matchId: string, enabled: boolean) {
-  if (!supabase) return
-  // Skip demo data with non-UUID IDs (e.g. '1', '2', '5')
-  if (!UUID_RE.test(matchId)) return
+  if (!supabase) { console.warn('[Reminder] supabase client is null'); return }
+  if (!UUID_RE.test(matchId)) {
+    console.warn('[Reminder] skipped — matchId is not a UUID (demo data):', matchId)
+    return
+  }
   const reminderTime = new Date(Date.now() + 30 * 60 * 1000).toISOString()
-  const { error } = await supabase
+  console.log('[Reminder] upserting → user:', userId, 'match:', matchId, 'enabled:', enabled)
+  const { data, error } = await supabase
     .from('reminders')
     .upsert(
       { user_id: userId, match_id: matchId, enabled, reminder_time: reminderTime },
       { onConflict: 'user_id,match_id' },
     )
-  if (error) console.error('upsertReminder:', error.message)
+    .select()
+  if (error) {
+    console.error('[Reminder] upsert FAILED:', error.code, error.message, error.details)
+  } else {
+    console.log('[Reminder] upsert OK:', data)
+  }
 }
 
 export async function upsertFollowedTeam(userId: string, teamId: string, enabled: boolean) {

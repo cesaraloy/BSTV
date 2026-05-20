@@ -66,8 +66,10 @@ export async function getSession(): Promise<AuthUser | null> {
     phone: session.user.phone ?? undefined,
     email: session.user.email ?? undefined,
   }
+  console.log('[Auth] session restored, user id:', user.id)
   // Ensure public.users record exists on every session restore
-  await upsertUser(user.id, { phone: user.phone, email: user.email })
+  const { error } = await upsertUser(user.id, { phone: user.phone, email: user.email })
+  if (error) console.error('[Auth] upsertUser failed:', error)
   return user
 }
 
@@ -108,10 +110,12 @@ export async function signOut(): Promise<void> {
 async function upsertUser(
   id: string,
   fields: { phone?: string; email?: string },
-) {
-  if (!supabase) return
-  await supabase.from('users').upsert(
+): Promise<{ error: unknown }> {
+  if (!supabase) return { error: null }
+  const { error } = await supabase.from('users').upsert(
     { id, name: 'Usuario', ...fields },
     { onConflict: 'id' },
   )
+  if (error) console.error('[Auth] upsertUser error:', error.code, error.message)
+  return { error }
 }

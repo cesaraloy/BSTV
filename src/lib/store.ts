@@ -73,20 +73,23 @@ export function useAppStore() {
       const next = new Set(prev)
       const nowEnabled = !next.has(matchId)
       nowEnabled ? next.add(matchId) : next.delete(matchId)
-      if (userRef.current) upsertReminder(userRef.current.id, matchId, nowEnabled)
+
+      console.group('[Reminder] toggleReminder')
+      console.log('matchId:', matchId)
+      console.log('nowEnabled:', nowEnabled)
+      console.log('user:', userRef.current?.id ?? 'NOT LOGGED IN')
+      console.groupEnd()
+
+      if (userRef.current) {
+        upsertReminder(userRef.current.id, matchId, nowEnabled)
+      }
 
       if (nowEnabled) {
-        // Request permission and wire up push / local notification
         requestPermission().then(async permission => {
           if (permission !== 'granted') return
-          if (userRef.current) {
-            await subscribeToPush(userRef.current.id)
-          }
-          // Also schedule a local notification as same-session fallback
+          if (userRef.current) await subscribeToPush(userRef.current.id)
           const match = matchesRef.current.find(m => m.id === matchId)
-          if (match) {
-            scheduleLocalNotification(matchId, match.home_team, match.away_team, match.match_time, match.match_date)
-          }
+          if (match) scheduleLocalNotification(matchId, match.home_team, match.away_team, match.match_time, match.match_date)
         })
       }
       return next
