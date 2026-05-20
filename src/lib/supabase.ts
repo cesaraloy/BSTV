@@ -138,6 +138,7 @@ export async function upsertReminder(userId: string, matchId: string, enabled: b
 
 export async function upsertFollowedTeam(userId: string, teamId: string, enabled: boolean) {
   if (!supabase) return
+  if (!UUID_RE.test(teamId)) return // skip demo string IDs
   const { error } = await supabase
     .from('user_followed_teams')
     .upsert(
@@ -149,7 +150,10 @@ export async function upsertFollowedTeam(userId: string, teamId: string, enabled
 
 export async function saveAllFollowedTeams(userId: string, teams: Team[]) {
   if (!supabase) return
-  const rows = teams.map(t => ({ user_id: userId, team_id: t.id, enabled: t.enabled }))
+  const rows = teams
+    .filter(t => UUID_RE.test(t.id)) // skip demo string IDs
+    .map(t => ({ user_id: userId, team_id: t.id, enabled: t.enabled }))
+  if (rows.length === 0) return
   const { error } = await supabase
     .from('user_followed_teams')
     .upsert(rows, { onConflict: 'user_id,team_id' })

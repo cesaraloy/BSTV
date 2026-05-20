@@ -4,7 +4,7 @@ import {
   fetchMatches, fetchVenues, fetchTeams, fetchAllVenueMatches,
   fetchUserReminders, fetchUserFollowedTeamIds,
   upsertReminder, upsertFollowedTeam, saveAllFollowedTeams,
-  fetchUserProfile, updateUserProfile, uploadAvatar,
+  fetchUserProfile, updateUserProfile,
 } from './supabase'
 import { requestPermission, subscribeToPush, scheduleLocalNotification } from './notifications'
 import type { Match, Team, Venue } from '../types'
@@ -21,7 +21,9 @@ export function useAppStore() {
   )
   const [user, setUserState] = useState<AuthUser | null>(null)
   const [userProfile, setUserProfile] = useState<{ name: string; location: string }>({ name: '', location: 'Madrid, España' })
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [avatarPreset, setAvatarPresetState] = useState<number>(
+    () => parseInt(localStorage.getItem('bstv-avatar') ?? '0')
+  )
   const [notifAdvance, setNotifAdvanceState] = useState<number>(
     () => parseInt(localStorage.getItem('bstv-notif-advance') ?? '30')
   )
@@ -66,7 +68,6 @@ export function useAppStore() {
       }
       if (profile) {
         setUserProfile({ name: profile.name ?? '', location: profile.default_location ?? 'Madrid, España' })
-        if (profile.avatar_url) setAvatarUrl(profile.avatar_url)
       }
     }
     loadUserData()
@@ -144,18 +145,15 @@ export function useAppStore() {
     localStorage.setItem('bstv-notif-advance', String(minutes))
   }, [])
 
-  const updateAvatarFromFile = useCallback(async (file: File) => {
-    if (!userRef.current) return
-    const url = await uploadAvatar(userRef.current.id, file)
-    if (!url) return
-    setAvatarUrl(url)
-    updateUserProfile(userRef.current.id, { avatar_url: url })
+  const setAvatarPreset = useCallback((index: number) => {
+    setAvatarPresetState(index)
+    localStorage.setItem('bstv-avatar', String(index))
   }, [])
 
   return {
     matches, venues, teams, venueMatches,
-    reminders, theme, user, userProfile, avatarUrl, notifAdvance, loading,
+    reminders, theme, user, userProfile, avatarPreset, notifAdvance, loading,
     setUser, toggleReminder, toggleTeam, saveTeams, toggleTheme, saveProfile,
-    setNotifAdvance, updateAvatarFromFile,
+    setNotifAdvance, setAvatarPreset,
   }
 }

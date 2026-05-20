@@ -12,7 +12,7 @@ interface AppContextType {
   theme: 'dark' | 'light'
   user: AuthUser | null
   userProfile: { name: string; location: string }
-  avatarUrl: string | null
+  avatarPreset: number
   notifAdvance: number
   loading: boolean
   setUser: (user: AuthUser | null) => void
@@ -22,7 +22,7 @@ interface AppContextType {
   toggleTheme: () => void
   saveProfile: (name: string, location: string) => void
   setNotifAdvance: (minutes: number) => void
-  updateAvatarFromFile: (file: File) => Promise<void>
+  setAvatarPreset: (index: number) => void
 }
 
 const AppContext = createContext<AppContextType | null>(null)

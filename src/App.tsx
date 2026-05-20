@@ -39,6 +39,8 @@ function AppInner() {
   const [screen, setScreen] = useState<Screen>({ type: 'tab', tab: 'home' })
   const [activeTab, setActiveTab] = useState<Tab>('home')
   const [mapMatchFilter, setMapMatchFilter] = useState<string | null>(null)
+  // Lazy-mount tabs: only render once first visited (avoids Leaflet init inside display:none)
+  const [visitedTabs, setVisitedTabs] = useState<Set<Tab>>(() => new Set<Tab>(['home']))
 
   // Restore session on mount + listen for magic link redirect
   useEffect(() => {
@@ -140,6 +142,7 @@ function AppInner() {
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab)
     setScreen({ type: 'tab', tab })
+    setVisitedTabs(prev => { const n = new Set(prev); n.add(tab); return n })
     if (tab !== 'map') setMapMatchFilter(null)
   }
 
@@ -156,33 +159,41 @@ function AppInner() {
   return (
     <div className="relative w-full h-screen overflow-hidden bg-brand-bg flex flex-col">
       <div className="flex-1 overflow-hidden relative">
-        {/* Tab screens: always mounted, hidden when not active to preserve local state */}
-        <div className={isTab && screen.tab === 'home' ? '' : 'hidden'}>
-          <HomeScreen
-            onMatchClick={match => navigate({ type: 'match-detail', match })}
-            onVenueClick={venue => navigate({ type: 'venue-detail', venue, from: 'home' as Tab })}
-            onAllMatchesClick={() => handleTabChange('calendar')}
-            onMapClick={() => handleTabChange('map')}
-          />
-        </div>
-        <div className={isTab && screen.tab === 'calendar' ? '' : 'hidden'}>
-          <CalendarScreen onMatchClick={match => navigate({ type: 'match-detail', match })} />
-        </div>
-        <div className={isTab && screen.tab === 'map' ? '' : 'hidden'}>
-          <MapScreen
-            onVenueClick={venue => navigate({ type: 'venue-detail', venue, from: 'map' })}
-            matchFilter={mapMatchFilter}
-          />
-        </div>
-        <div className={isTab && screen.tab === 'profile' ? '' : 'hidden'}>
-          <ProfileScreen
-            onTeamsClick={() => navigate({ type: 'teams' })}
-            onFAQClick={() => navigate({ type: 'faq' })}
-            onSignOut={handleSignOut}
-            userPhone={user?.phone}
-            userEmail={user?.email}
-          />
-        </div>
+        {/* Tab screens: lazy-mounted on first visit, then kept alive hidden */}
+        {visitedTabs.has('home') && (
+          <div className={isTab && screen.tab === 'home' ? '' : 'hidden'}>
+            <HomeScreen
+              onMatchClick={match => navigate({ type: 'match-detail', match })}
+              onVenueClick={venue => navigate({ type: 'venue-detail', venue, from: 'home' as Tab })}
+              onAllMatchesClick={() => handleTabChange('calendar')}
+              onMapClick={() => handleTabChange('map')}
+            />
+          </div>
+        )}
+        {visitedTabs.has('calendar') && (
+          <div className={isTab && screen.tab === 'calendar' ? '' : 'hidden'}>
+            <CalendarScreen onMatchClick={match => navigate({ type: 'match-detail', match })} />
+          </div>
+        )}
+        {visitedTabs.has('map') && (
+          <div className={isTab && screen.tab === 'map' ? '' : 'hidden'}>
+            <MapScreen
+              onVenueClick={venue => navigate({ type: 'venue-detail', venue, from: 'map' })}
+              matchFilter={mapMatchFilter}
+            />
+          </div>
+        )}
+        {visitedTabs.has('profile') && (
+          <div className={isTab && screen.tab === 'profile' ? '' : 'hidden'}>
+            <ProfileScreen
+              onTeamsClick={() => navigate({ type: 'teams' })}
+              onFAQClick={() => navigate({ type: 'faq' })}
+              onSignOut={handleSignOut}
+              userPhone={user?.phone}
+              userEmail={user?.email}
+            />
+          </div>
+        )}
 
         {/* Stack screens: mounted on demand */}
         {screen.type === 'match-detail' && (

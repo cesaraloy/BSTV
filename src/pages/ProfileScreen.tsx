@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react'
-import type React from 'react'
-import { ChevronRight, LogOut, MapPin, Bell, Sun, Moon, Check, Edit3, X, HelpCircle, Camera } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronRight, LogOut, MapPin, Bell, Sun, Moon, Check, Edit3, X, HelpCircle } from 'lucide-react'
 import Logo from '../components/Logo'
+import { AvatarPreset, AvatarPicker } from '../components/AvatarPreset'
 import { useApp } from '../lib/context'
 
 interface Props {
@@ -19,13 +19,12 @@ const ADVANCE_OPTIONS = [
 ]
 
 export default function ProfileScreen({ onTeamsClick, onFAQClick, onSignOut, userPhone, userEmail }: Props) {
-  const { theme, toggleTheme, reminders, teams, userProfile, avatarUrl, notifAdvance, saveProfile, setNotifAdvance, updateAvatarFromFile } = useApp()
+  const { theme, toggleTheme, reminders, teams, userProfile, avatarPreset, notifAdvance, saveProfile, setNotifAdvance, setAvatarPreset } = useApp()
   const [editing, setEditing] = useState(false)
   const [draftName, setDraftName] = useState('')
   const [draftCity, setDraftCity] = useState('')
   const [showNotifPicker, setShowNotifPicker] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false)
 
   const followedCount = teams.filter(t => t.enabled).length
   const reminderCount = reminders.size
@@ -37,19 +36,12 @@ export default function ProfileScreen({ onTeamsClick, onFAQClick, onSignOut, use
     setDraftName(userProfile.name || displayName)
     setDraftCity(displayCity)
     setEditing(true)
+    setShowAvatarPicker(false)
   }
 
   function confirmEdit() {
     saveProfile(draftName.trim() || displayName, draftCity.trim() || displayCity)
     setEditing(false)
-  }
-
-  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-    await updateAvatarFromFile(file)
-    setUploading(false)
   }
 
   return (
@@ -60,24 +52,15 @@ export default function ProfileScreen({ onTeamsClick, onFAQClick, onSignOut, use
           <h1 className="text-2xl font-bold text-brand-text tracking-tight">Perfil</h1>
           {editing ? (
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setEditing(false)}
-                className="w-9 h-9 rounded-full bg-brand-card border border-brand-border flex items-center justify-center"
-              >
+              <button onClick={() => setEditing(false)} className="w-9 h-9 rounded-full bg-brand-card border border-brand-border flex items-center justify-center">
                 <X size={16} className="text-brand-muted" />
               </button>
-              <button
-                onClick={confirmEdit}
-                className="w-9 h-9 rounded-full bg-brand-navy flex items-center justify-center"
-              >
+              <button onClick={confirmEdit} className="w-9 h-9 rounded-full bg-brand-navy flex items-center justify-center">
                 <Check size={16} className="text-white" />
               </button>
             </div>
           ) : (
-            <button
-              onClick={startEdit}
-              className="w-9 h-9 rounded-full bg-brand-card border border-brand-border flex items-center justify-center"
-            >
+            <button onClick={startEdit} className="w-9 h-9 rounded-full bg-brand-card border border-brand-border flex items-center justify-center">
               <Edit3 size={16} className="text-brand-text" />
             </button>
           )}
@@ -87,33 +70,24 @@ export default function ProfileScreen({ onTeamsClick, onFAQClick, onSignOut, use
       {/* Avatar + user info */}
       <div className="flex flex-col items-center px-5 pb-5">
         <div className="relative mb-3">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-b from-blue-600 to-brand-navy flex items-center justify-center border-2 border-brand-blue shadow-lg overflow-hidden">
-            {avatarUrl
-              ? <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-              : <Avatar3D />}
-            {uploading && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              </div>
-            )}
-          </div>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="absolute bottom-0 right-0 w-7 h-7 bg-brand-navy rounded-full flex items-center justify-center border-2 border-brand-bg"
-          >
-            <Camera size={12} className="text-white" />
+          <button onClick={() => { setShowAvatarPicker(p => !p); setEditing(false) }}>
+            <AvatarPreset index={avatarPreset} size="lg" />
           </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleAvatarChange}
-          />
+          <div className="absolute bottom-0 right-0 w-7 h-7 bg-brand-navy rounded-full flex items-center justify-center border-2 border-brand-bg pointer-events-none">
+            <Edit3 size={11} className="text-white" />
+          </div>
         </div>
 
+        {/* Avatar picker */}
+        {showAvatarPicker && (
+          <div className="w-full max-w-xs mb-4 bg-brand-card border border-brand-border rounded-2xl p-4">
+            <p className="text-xs font-bold text-brand-muted uppercase tracking-widest mb-3 text-center">Elige tu avatar</p>
+            <AvatarPicker selected={avatarPreset} onChange={i => { setAvatarPreset(i); setShowAvatarPicker(false) }} />
+          </div>
+        )}
+
         {editing ? (
-          <div className="w-full max-w-xs flex flex-col gap-2 mt-1">
+          <div className="w-full max-w-xs flex flex-col gap-2">
             <input
               autoFocus
               value={draftName}
@@ -134,19 +108,16 @@ export default function ProfileScreen({ onTeamsClick, onFAQClick, onSignOut, use
         ) : (
           <>
             <p className="text-lg font-bold text-brand-text">{displayName}</p>
-            <p className="text-sm text-brand-muted font-mono mt-0.5">
-              {userEmail ?? userPhone ?? ''}
-            </p>
+            <p className="text-sm text-brand-muted font-mono mt-0.5">{userEmail ?? userPhone ?? ''}</p>
             <div className="flex items-center gap-1.5 mt-1 text-xs text-brand-muted">
-              <MapPin size={11} />
-              <span>{displayCity}</span>
+              <MapPin size={11} /><span>{displayCity}</span>
             </div>
           </>
         )}
       </div>
 
       {/* Stats strip */}
-      {!editing && (
+      {!editing && !showAvatarPicker && (
         <div className="mx-5 mb-4 grid grid-cols-2 gap-3">
           <div className="bg-brand-card border border-brand-border rounded-2xl p-4 flex flex-col items-center gap-1">
             <span className="text-2xl font-black text-brand-blue">{reminderCount}</span>
@@ -161,10 +132,7 @@ export default function ProfileScreen({ onTeamsClick, onFAQClick, onSignOut, use
 
       <div className="px-5 flex flex-col gap-3">
         {/* Teams card */}
-        <button
-          onClick={onTeamsClick}
-          className="w-full bg-brand-card border border-brand-border rounded-2xl p-4 flex items-center gap-3 active:scale-[0.98] transition-transform text-left"
-        >
+        <button onClick={onTeamsClick} className="w-full bg-brand-card border border-brand-border rounded-2xl p-4 flex items-center gap-3 active:scale-[0.98] transition-transform text-left">
           <div className="w-10 h-10 rounded-xl bg-brand-navy/20 border border-brand-blue/20 flex items-center justify-center">
             <span className="text-xl">🏆</span>
           </div>
@@ -181,10 +149,7 @@ export default function ProfileScreen({ onTeamsClick, onFAQClick, onSignOut, use
 
         <div className="bg-brand-card border border-brand-border rounded-2xl overflow-hidden">
           {/* Notifications */}
-          <button
-            onClick={() => setShowNotifPicker(p => !p)}
-            className="w-full flex items-center gap-3 px-4 py-3.5 active:bg-brand-border/30 transition-colors"
-          >
+          <button onClick={() => setShowNotifPicker(p => !p)} className="w-full flex items-center gap-3 px-4 py-3.5 active:bg-brand-border/30 transition-colors">
             <Bell size={17} className="text-brand-muted shrink-0" />
             <span className="flex-1 text-sm text-brand-text text-left">Notificaciones</span>
             <span className="text-xs text-brand-muted">
@@ -192,35 +157,22 @@ export default function ProfileScreen({ onTeamsClick, onFAQClick, onSignOut, use
             </span>
             <ChevronRight size={15} className={`text-brand-muted shrink-0 transition-transform ${showNotifPicker ? 'rotate-90' : ''}`} />
           </button>
-
           {showNotifPicker && (
             <div className="px-4 pb-4 flex gap-2">
               {ADVANCE_OPTIONS.map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => { setNotifAdvance(opt.value); setShowNotifPicker(false) }}
-                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors border ${
-                    notifAdvance === opt.value
-                      ? 'bg-brand-navy border-brand-blue text-white'
-                      : 'bg-brand-accent border-brand-border text-brand-muted'
-                  }`}
-                >
+                <button key={opt.value} onClick={() => { setNotifAdvance(opt.value); setShowNotifPicker(false) }}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors border ${notifAdvance === opt.value ? 'bg-brand-navy border-brand-blue text-white' : 'bg-brand-accent border-brand-border text-brand-muted'}`}>
                   {opt.label}
                 </button>
               ))}
             </div>
           )}
 
-          <Divider />
+          <div className="ml-12 border-b border-brand-border" />
 
           {/* Theme toggle */}
-          <button
-            onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-4 py-3.5 active:bg-brand-border/30 transition-colors"
-          >
-            {theme === 'dark'
-              ? <Moon size={17} className="text-brand-blue shrink-0" />
-              : <Sun size={17} className="text-brand-blue shrink-0" />}
+          <button onClick={toggleTheme} className="w-full flex items-center gap-3 px-4 py-3.5 active:bg-brand-border/30 transition-colors">
+            {theme === 'dark' ? <Moon size={17} className="text-brand-blue shrink-0" /> : <Sun size={17} className="text-brand-blue shrink-0" />}
             <span className="flex-1 text-sm text-brand-text text-left">Apariencia</span>
             <span className="text-xs text-brand-muted">{theme === 'dark' ? 'Oscuro' : 'Claro'}</span>
             <div className={`w-11 h-6 rounded-full relative transition-colors ${theme === 'light' ? 'bg-brand-navy' : 'bg-brand-border'}`}>
@@ -228,54 +180,25 @@ export default function ProfileScreen({ onTeamsClick, onFAQClick, onSignOut, use
             </div>
           </button>
 
-          <Divider />
+          <div className="ml-12 border-b border-brand-border" />
 
           {/* FAQ */}
-          <button
-            onClick={onFAQClick}
-            className="w-full flex items-center gap-3 px-4 py-3.5 active:bg-brand-border/30 transition-colors"
-          >
+          <button onClick={onFAQClick} className="w-full flex items-center gap-3 px-4 py-3.5 active:bg-brand-border/30 transition-colors">
             <HelpCircle size={17} className="text-brand-muted shrink-0" />
             <span className="flex-1 text-sm text-brand-text text-left">Preguntas frecuentes</span>
             <ChevronRight size={15} className="text-brand-muted shrink-0" />
           </button>
         </div>
 
-        {/* App logo */}
         <div className="flex justify-center py-2 opacity-40">
           <Logo size="sm" />
         </div>
 
-        {/* Logout */}
-        <button
-          onClick={onSignOut}
-          className="w-full bg-brand-card border border-red-900/40 rounded-2xl p-4 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
-        >
+        <button onClick={onSignOut} className="w-full bg-brand-card border border-red-900/40 rounded-2xl p-4 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
           <LogOut size={18} className="text-red-400" />
           <span className="text-sm font-semibold text-red-400">Cerrar sesión</span>
         </button>
       </div>
     </div>
-  )
-}
-
-function Divider() {
-  return <div className="ml-12 border-b border-brand-border" />
-}
-
-function Avatar3D() {
-  return (
-    <svg viewBox="0 0 96 96" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-      <rect x="20" y="60" width="56" height="40" rx="8" fill="#0b3aae" />
-      <rect x="28" y="60" width="40" height="8" fill="#1a56db" />
-      <text x="48" y="84" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold" fontFamily="sans-serif">+BSportTV</text>
-      <circle cx="48" cy="42" r="20" fill="#FBBF24" />
-      <circle cx="41" cy="39" r="3" fill="#1F2937" />
-      <circle cx="55" cy="39" r="3" fill="#1F2937" />
-      <circle cx="42" cy="38" r="1" fill="white" />
-      <circle cx="56" cy="38" r="1" fill="white" />
-      <path d="M40 47 Q48 54 56 47" stroke="#1F2937" strokeWidth="2" fill="none" strokeLinecap="round" />
-      <path d="M28 38 Q30 20 48 22 Q66 20 68 38" fill="#1F2937" />
-    </svg>
   )
 }
