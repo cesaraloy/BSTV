@@ -1,6 +1,7 @@
 import { ArrowLeft, Bell, MapPin, ChevronRight } from 'lucide-react'
 import { useApp } from '../lib/context'
 import { competitionEmojis } from '../data/demo'
+import TeamLogo from '../components/TeamLogo'
 import type { Match, Venue } from '../types'
 
 interface Props {
@@ -16,9 +17,6 @@ export default function MatchDetailScreen({ match, onBack, onVenueClick }: Props
   const relatedVenueIds = venueMatches[match.id] ?? []
   const relatedVenues = venues.filter(v => relatedVenueIds.includes(v.id))
   const emoji = competitionEmojis[match.competition] ?? '🏆'
-
-  const homeInitials = match.home_team.split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase()
-  const awayInitials = match.away_team.split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase()
 
   return (
     <div className="flex flex-col h-full overflow-y-auto pb-6">
@@ -41,13 +39,13 @@ export default function MatchDetailScreen({ match, onBack, onVenueClick }: Props
           </div>
 
           <div className="flex items-center justify-between mb-4">
-            <TeamHero name={match.home_team} initials={homeInitials} />
+            <TeamHero name={match.home_team} logoUrl={match.home_team_logo} />
             <div className="flex flex-col items-center px-4">
               <span className="text-3xl font-black text-brand-text tracking-tight">{match.match_time}</span>
               <span className="text-xs text-brand-muted mt-1 font-medium">VS</span>
               <span className="text-sm font-semibold text-brand-blue mt-1">{match.match_date}</span>
             </div>
-            <TeamHero name={match.away_team} initials={awayInitials} right />
+            <TeamHero name={match.away_team} logoUrl={match.away_team_logo} />
           </div>
 
           <button
@@ -113,11 +111,11 @@ export default function MatchDetailScreen({ match, onBack, onVenueClick }: Props
   )
 }
 
-function TeamHero({ name, initials, right }: { name: string; initials: string; right?: boolean }) {
+function TeamHero({ name, logoUrl }: { name: string; logoUrl?: string }) {
   return (
-    <div className={`flex flex-col items-center gap-2 flex-1 ${right ? '' : ''}`}>
-      <div className="w-16 h-16 rounded-2xl bg-brand-accent border border-brand-border flex items-center justify-center">
-        <span className="text-sm font-black text-brand-text">{initials}</span>
+    <div className="flex flex-col items-center gap-2 flex-1">
+      <div className="w-16 h-16 rounded-2xl bg-brand-accent border border-brand-border flex items-center justify-center overflow-hidden">
+        <TeamLogo name={name} logoUrl={logoUrl} size="lg" />
       </div>
       <span className="text-xs font-bold text-brand-text text-center leading-tight max-w-[80px]">{name}</span>
     </div>

@@ -1,21 +1,12 @@
 import { useState } from 'react'
 import { ArrowLeft, Search, Check } from 'lucide-react'
 import { useApp } from '../lib/context'
+import TeamLogo from '../components/TeamLogo'
 
 const COMPETITION_FILTERS = ['Todos', 'Hypermotion', 'Champions', 'Europa', "Women's CL", 'MotoGP', 'F1']
 
 interface Props {
   onBack: () => void
-}
-
-const countryFlag: Record<string, string> = {
-  España: '🇪🇸',
-  Inglaterra: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-  Italia: '🇮🇹',
-  Alemania: '🇩🇪',
-  Francia: '🇫🇷',
-  'Países Bajos': '🇳🇱',
-  'Reino Unido': '🇬🇧',
 }
 
 const competitionKey: Record<string, string> = {
@@ -93,8 +84,8 @@ export default function TeamsScreen({ onBack }: Props) {
                 onClick={() => toggleTeam(team.id)}
                 className="w-full flex items-center gap-3 px-4 py-3 active:bg-brand-border/30 transition-colors"
               >
-                <div className="w-9 h-9 rounded-full bg-brand-accent border border-brand-border flex items-center justify-center shrink-0">
-                  <span className="text-base">{countryFlag[team.country] ?? '🏁'}</span>
+                <div className="w-9 h-9 rounded-sm flex items-center justify-center shrink-0">
+                  <TeamLogo name={team.name} logoUrl={team.logo_url} size="md" />
                 </div>
                 <div className="flex-1 min-w-0 text-left">
                   <p className="text-sm font-semibold text-brand-text">{team.name}</p>
