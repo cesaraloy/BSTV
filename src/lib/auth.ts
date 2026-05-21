@@ -50,7 +50,7 @@ export async function verifyOTP(
   if (error) return { user: null, error: error.message }
   if (!data.user) return { user: null, error: 'Error de verificación' }
 
-  await upsertUser(data.user.id, { phone: data.user.phone ?? phone })
+  await ensureUserRow(data.user.id)
   return { user: { id: data.user.id, phone: data.user.phone ?? phone }, error: null }
 }
 
@@ -68,7 +68,7 @@ export async function verifyEmailOTP(
   if (error) return { user: null, error: error.message }
   if (!data.user) return { user: null, error: 'Error de verificación' }
 
-  await upsertUser(data.user.id, { email: data.user.email ?? email })
+  await ensureUserRow(data.user.id, data.user.email ?? email)
   return { user: { id: data.user.id, email: data.user.email ?? email }, error: null }
 }
 
@@ -85,9 +85,7 @@ export async function getSession(): Promise<AuthUser | null> {
     email: session.user.email ?? undefined,
   }
   console.log('[Auth] session restored, user id:', user.id)
-  // Ensure public.users record exists on every session restore
-  const { error } = await upsertUser(user.id, { phone: user.phone, email: user.email })
-  if (error) console.error('[Auth] upsertUser failed:', error)
+  await ensureUserRow(user.id, user.email)
   return user
 }
 
@@ -105,9 +103,8 @@ export function onAuthStateChange(
           phone: session.user.phone ?? undefined,
           email: session.user.email ?? undefined,
         }
-        // Upsert on first sign-in
         if (event === 'SIGNED_IN') {
-          await upsertUser(user.id, { phone: user.phone, email: user.email })
+          await ensureUserRow(user.id, user.email)
         }
         callback(user)
       } else {
@@ -125,23 +122,13 @@ export async function signOut(): Promise<void> {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────
-async function upsertUser(
-  id: string,
-  fields: { phone?: string; email?: string },
-): Promise<{ error: unknown }> {
+// Only ensures the row exists — never overwrites name or other data
+async function ensureUserRow(id: string, email?: string): Promise<{ error: unknown }> {
   if (!supabase) return { error: null }
-
-  // Insert new user with default name — ignore if already exists (preserves saved name)
-  await supabase.from('users').upsert(
-    { id, name: 'Usuario', ...fields },
+  const { error } = await supabase.from('users').upsert(
+    { id, name: 'Usuario', email: email ?? '' },
     { onConflict: 'id', ignoreDuplicates: true },
   )
-
-  // For existing users, only update contact fields (phone/email), never name
-  if (Object.keys(fields).length > 0) {
-    const { error } = await supabase.from('users').update(fields).eq('id', id)
-    if (error) console.error('[Auth] upsertUser update error:', error.code, error.message)
-    return { error }
-  }
-  return { error: null }
+  if (error) console.error('[Auth] ensureUserRow error:', error.code, error.message)
+  return { error }
 }

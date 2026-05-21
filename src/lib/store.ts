@@ -83,6 +83,7 @@ export function useAppStore() {
       if (followed.size > 0) {
         setTeams(prev => prev.map(t => ({ ...t, enabled: followed.has(t.id) })))
       }
+      console.log('[Store] profile loaded:', profile)
       if (profile) {
         setUserProfile({ name: profile.name ?? '', location: profile.default_location ?? 'Madrid, España' })
         const avatarIdx = parseInt(profile.avatar_url ?? '')
@@ -159,7 +160,12 @@ export function useAppStore() {
 
   const saveProfile = useCallback((name: string, location: string) => {
     setUserProfile({ name, location })
-    if (userRef.current) updateUserProfile(userRef.current.id, { name, default_location: location })
+    if (userRef.current) {
+      console.log('[Store] saving profile:', { name, location, userId: userRef.current.id })
+      updateUserProfile(userRef.current.id, { name, default_location: location })
+    } else {
+      console.warn('[Store] saveProfile called but no user logged in')
+    }
   }, [])
 
   const setNotifAdvance = useCallback((minutes: number) => {

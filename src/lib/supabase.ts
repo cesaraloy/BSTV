@@ -94,8 +94,10 @@ export async function fetchUserProfile(userId: string): Promise<{ name: string; 
 
 export async function updateUserProfile(userId: string, fields: { name?: string; default_location?: string; avatar_url?: string }) {
   if (!supabase) return
-  const { error } = await supabase.from('users').update(fields).eq('id', userId)
-  if (error) console.error('updateUserProfile:', error.message)
+  console.log('[Supabase] updateUserProfile fields:', fields, 'userId:', userId)
+  const { error, data } = await supabase.from('users').update(fields).eq('id', userId).select('id, name')
+  if (error) console.error('[Supabase] updateUserProfile FAILED:', error.code, error.message, error.details)
+  else console.log('[Supabase] updateUserProfile OK:', data)
 }
 
 export async function uploadAvatar(userId: string, file: File): Promise<string | null> {
