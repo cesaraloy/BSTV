@@ -85,6 +85,11 @@ export function useAppStore() {
       }
       if (profile) {
         setUserProfile({ name: profile.name ?? '', location: profile.default_location ?? 'Madrid, España' })
+        const avatarIdx = parseInt(profile.avatar_url ?? '')
+        if (!isNaN(avatarIdx)) {
+          setAvatarPresetState(avatarIdx)
+          localStorage.setItem('bstv-avatar', String(avatarIdx))
+        }
       }
     }
     loadUserData()
@@ -166,12 +171,20 @@ export function useAppStore() {
   const setAvatarPreset = useCallback((index: number) => {
     setAvatarPresetState(index)
     localStorage.setItem('bstv-avatar', String(index))
+    if (userRef.current) updateUserProfile(userRef.current.id, { avatar_url: String(index) })
+  }, [])
+
+  const refreshMatches = useCallback(async () => {
+    setLoading(true)
+    const m = await fetchMatches()
+    if (m && m.length > 0) { setMatches(m); matchesRef.current = m }
+    setLoading(false)
   }, [])
 
   return {
     matches, venues, teams, venueMatches,
     reminders, theme, user, userProfile, avatarPreset, notifAdvance, loading,
     setUser, toggleReminder, toggleTeam, saveTeams, toggleTheme, saveProfile,
-    setNotifAdvance, setAvatarPreset,
+    setNotifAdvance, setAvatarPreset, refreshMatches,
   }
 }

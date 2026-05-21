@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { SlidersHorizontal } from 'lucide-react'
 import MatchCard from '../components/MatchCard'
 import Logo from '../components/Logo'
 import { useApp } from '../lib/context'
 import type { Match } from '../types'
+
+const PTR_THRESHOLD = 64
 
 const FILTERS = ['Todos', 'Mis equipos', 'Hoy', 'Mañana', 'LaLiga', 'Hypermotion', 'Premier', 'Champions', 'Europa', "Women's", 'MotoGP', 'F1']
 
@@ -23,8 +25,34 @@ interface Props {
 }
 
 export default function CalendarScreen({ onMatchClick }: Props) {
-  const { matches, reminders, toggleReminder, loading, teams } = useApp()
+  const { matches, reminders, toggleReminder, loading, teams, refreshMatches } = useApp()
   const [activeFilter, setActiveFilter] = useState('Todos')
+  const [pullY, setPullY] = useState(0)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const touchStartY = useRef(0)
+
+  function onTouchStart(e: React.TouchEvent) {
+    touchStartY.current = e.touches[0].clientY
+  }
+
+  function onTouchMove(e: React.TouchEvent) {
+    if (isRefreshing) return
+    const el = scrollRef.current
+    if (!el || el.scrollTop > 0) return
+    const delta = e.touches[0].clientY - touchStartY.current
+    if (delta > 0) setPullY(Math.min(delta * 0.5, PTR_THRESHOLD + 16))
+  }
+
+  async function onTouchEnd() {
+    if (pullY >= PTR_THRESHOLD) {
+      setIsRefreshing(true)
+      setPullY(PTR_THRESHOLD)
+      await refreshMatches()
+      setIsRefreshing(false)
+    }
+    setPullY(0)
+  }
 
   const followedNames = new Set(teams.filter(t => t.enabled).map(t => t.name))
 
@@ -75,8 +103,29 @@ export default function CalendarScreen({ onMatchClick }: Props) {
         </div>
       </div>
 
+      {/* Pull-to-refresh indicator */}
+      <div
+        className="flex items-center justify-center overflow-hidden transition-all duration-200"
+        style={{ height: pullY > 0 || isRefreshing ? Math.max(pullY, isRefreshing ? PTR_THRESHOLD : 0) : 0 }}
+      >
+        <svg
+          className={`w-5 h-5 text-brand-blue ${isRefreshing ? 'animate-spin' : ''}`}
+          style={{ transform: isRefreshing ? undefined : `rotate(${(pullY / PTR_THRESHOLD) * 360}deg)` }}
+          viewBox="0 0 24 24" fill="none"
+        >
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+        </svg>
+      </div>
+
       {/* Scroll area */}
-      <div className="flex-1 overflow-y-auto px-5 pb-28">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto px-5 pb-28"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         <div className="flex items-center justify-between mt-4 mb-3">
           <p className="text-xs font-bold text-brand-muted uppercase tracking-widest">
             {activeFilter === 'Mis equipos' ? 'Mis equipos' : 'Próximos partidos'}

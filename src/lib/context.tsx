@@ -23,6 +23,7 @@ interface AppContextType {
   saveProfile: (name: string, location: string) => void
   setNotifAdvance: (minutes: number) => void
   setAvatarPreset: (index: number) => void
+  refreshMatches: () => Promise<void>
 }
 
 const AppContext = createContext<AppContextType | null>(null)

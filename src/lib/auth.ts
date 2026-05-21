@@ -130,10 +130,18 @@ async function upsertUser(
   fields: { phone?: string; email?: string },
 ): Promise<{ error: unknown }> {
   if (!supabase) return { error: null }
-  const { error } = await supabase.from('users').upsert(
+
+  // Insert new user with default name — ignore if already exists (preserves saved name)
+  await supabase.from('users').upsert(
     { id, name: 'Usuario', ...fields },
-    { onConflict: 'id' },
+    { onConflict: 'id', ignoreDuplicates: true },
   )
-  if (error) console.error('[Auth] upsertUser error:', error.code, error.message)
-  return { error }
+
+  // For existing users, only update contact fields (phone/email), never name
+  if (Object.keys(fields).length > 0) {
+    const { error } = await supabase.from('users').update(fields).eq('id', id)
+    if (error) console.error('[Auth] upsertUser update error:', error.code, error.message)
+    return { error }
+  }
+  return { error: null }
 }
