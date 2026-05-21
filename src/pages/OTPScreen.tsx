@@ -5,12 +5,11 @@ import Logo from '../components/Logo'
 interface Props {
   contact: string          // phone number or email address
   type: 'sms' | 'email'
+  codeLength?: number
   onVerify: (code: string) => Promise<{ error: string | null }>
   onBack: () => void
   onResend: () => Promise<{ error: string | null }>
 }
-
-const CODE_LENGTH = 6
 
 function maskContact(contact: string, type: 'sms' | 'email') {
   if (type === 'email') {
@@ -24,7 +23,8 @@ function maskContact(contact: string, type: 'sms' | 'email') {
   )
 }
 
-export default function OTPScreen({ contact, type, onVerify, onBack, onResend }: Props) {
+export default function OTPScreen({ contact, type, codeLength = 6, onVerify, onBack, onResend }: Props) {
+  const CODE_LENGTH = codeLength
   const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -51,7 +51,7 @@ export default function OTPScreen({ contact, type, onVerify, onBack, onResend }:
   }, [loading, onVerify])
 
   const handleChange = useCallback((index: number, value: string) => {
-    if (value.length === CODE_LENGTH && /^\d{6}$/.test(value)) {
+    if (value.length === CODE_LENGTH && /^\d+$/.test(value)) {
       const next = value.split('')
       setDigits(next)
       refs.current[CODE_LENGTH - 1]?.focus()
@@ -128,7 +128,7 @@ export default function OTPScreen({ contact, type, onVerify, onBack, onResend }:
               ref={el => { refs.current[i] = el }}
               type="text"
               inputMode="numeric"
-              maxLength={6}
+              maxLength={CODE_LENGTH}
               value={d}
               onChange={e => handleChange(i, e.target.value)}
               onKeyDown={e => handleKeyDown(i, e)}
