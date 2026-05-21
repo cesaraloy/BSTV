@@ -106,9 +106,11 @@ function AppInner() {
   if (authStep.step === 'loading') {
     return (
       <div className="relative w-full h-screen bg-brand-bg flex items-center justify-center">
-        <div className="w-16 h-16 rounded-2xl bg-brand-navy flex items-center justify-center animate-pulse">
-          <span className="text-3xl">⚽</span>
-        </div>
+        <img
+          src="https://wgkxsvgutyzcsfsexgpn.supabase.co/storage/v1/object/public/images/app-512-bstv.png"
+          alt="BSTV"
+          className="w-16 h-16 rounded-2xl animate-pulse"
+        />
       </div>
     )
   }

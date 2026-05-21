@@ -55,9 +55,11 @@ export default function LoginScreen({ onSendEmail, onSendOTP }: Props) {
 
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center">
-          <div className="w-20 h-20 rounded-3xl bg-brand-navy flex items-center justify-center mb-4 shadow-lg shadow-brand-navy/30">
-            <span className="text-4xl">⚽</span>
-          </div>
+          <img
+            src="https://wgkxsvgutyzcsfsexgpn.supabase.co/storage/v1/object/public/images/app-512-bstv.png"
+            alt="BSTV"
+            className="w-20 h-20 rounded-3xl mb-4 shadow-lg shadow-brand-navy/30"
+          />
           <Logo size="lg" />
           <p className="text-brand-muted text-sm text-center mt-2 leading-relaxed">
             Encuentra bares para ver tus partidos
