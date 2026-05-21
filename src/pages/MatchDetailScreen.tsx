@@ -1,7 +1,10 @@
-import { ArrowLeft, Bell, MapPin, ChevronRight } from 'lucide-react'
+import { useState } from 'react'
+import { ArrowLeft, Bell, MapPin, ChevronRight, Share2, Check } from 'lucide-react'
 import { useApp } from '../lib/context'
 import TeamLogo, { CompetitionLogo } from '../components/TeamLogo'
 import type { Match, Venue } from '../types'
+
+const APP_URL = import.meta.env.VITE_APP_URL ?? window.location.origin
 
 interface Props {
   match: Match
@@ -13,9 +16,33 @@ interface Props {
 export default function MatchDetailScreen({ match, onBack, onVenueClick, onMapClick }: Props) {
   const { reminders, toggleReminder, venues, venueMatches } = useApp()
   const reminderActive = reminders.has(match.id)
+  const [copied, setCopied] = useState(false)
 
   const relatedVenueIds = venueMatches[match.id] ?? []
   const relatedVenues = venues.filter(v => relatedVenueIds.includes(v.id))
+
+  async function handleShare() {
+    const title = `${match.home_team} vs ${match.away_team}`
+    const text = `${match.competition} · ${match.match_date} ${match.match_time} · Encuéntralo en BarSportTV`
+    const url = APP_URL
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url })
+        return
+      } catch {
+        // User cancelled or error — fall through to clipboard
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(`${title}\n${text}\n${url}`)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard not available
+    }
+  }
 
   return (
     <div className="flex flex-col h-full overflow-y-auto pb-6">
@@ -25,7 +52,16 @@ export default function MatchDetailScreen({ match, onBack, onVenueClick, onMapCl
           <button onClick={onBack} className="w-9 h-9 rounded-full bg-brand-card border border-brand-border flex items-center justify-center">
             <ArrowLeft size={18} className="text-brand-text" />
           </button>
-          <span className="text-sm text-brand-muted">Detalle del partido</span>
+          <span className="flex-1 text-sm text-brand-muted">Detalle del partido</span>
+          <button
+            onClick={handleShare}
+            className="w-9 h-9 rounded-full bg-brand-card border border-brand-border flex items-center justify-center transition-colors active:scale-95"
+          >
+            {copied
+              ? <Check size={16} className="text-brand-blue" />
+              : <Share2 size={16} className="text-brand-text" />
+            }
+          </button>
         </div>
       </div>
 
