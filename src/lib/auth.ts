@@ -54,6 +54,24 @@ export async function verifyOTP(
   return { user: { id: data.user.id, phone: data.user.phone ?? phone }, error: null }
 }
 
+// ── Email OTP (6-digit code sent alongside the magic link) ────────
+export async function verifyEmailOTP(
+  email: string,
+  token: string,
+): Promise<{ user: AuthUser | null; error: string | null }> {
+  if (!supabase) {
+    if (token.length === 6) return { user: { id: 'demo-user', email }, error: null }
+    return { user: null, error: 'Código incorrecto' }
+  }
+
+  const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' })
+  if (error) return { user: null, error: error.message }
+  if (!data.user) return { user: null, error: 'Error de verificación' }
+
+  await upsertUser(data.user.id, { email: data.user.email ?? email })
+  return { user: { id: data.user.id, email: data.user.email ?? email }, error: null }
+}
+
 // ── Session management ────────────────────────────────────────────
 export async function getSession(): Promise<AuthUser | null> {
   if (!supabase) return null

@@ -3,7 +3,8 @@ import { ArrowLeft } from 'lucide-react'
 import Logo from '../components/Logo'
 
 interface Props {
-  phone: string
+  contact: string          // phone number or email address
+  type: 'sms' | 'email'
   onVerify: (code: string) => Promise<{ error: string | null }>
   onBack: () => void
   onResend: () => Promise<{ error: string | null }>
@@ -11,49 +12,32 @@ interface Props {
 
 const CODE_LENGTH = 6
 
-export default function OTPScreen({ phone, onVerify, onBack, onResend }: Props) {
+function maskContact(contact: string, type: 'sms' | 'email') {
+  if (type === 'email') {
+    const [user, domain] = contact.split('@')
+    if (!domain) return contact
+    const visible = user.slice(0, 2)
+    return `${visible}${'·'.repeat(Math.max(user.length - 2, 2))}@${domain}`
+  }
+  return contact.replace(/(\+\d{2,3})(\d+)(\d{3})/, (_, c, m, e) =>
+    `${c} ${'·'.repeat(m.length)} ${e}`
+  )
+}
+
+export default function OTPScreen({ contact, type, onVerify, onBack, onResend }: Props) {
   const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [resendCooldown, setResendCooldown] = useState(30)
   const refs = useRef<(HTMLInputElement | null)[]>([])
 
-  // Cooldown timer
   useEffect(() => {
     if (resendCooldown <= 0) return
     const t = setInterval(() => setResendCooldown(v => v - 1), 1000)
     return () => clearInterval(t)
   }, [resendCooldown])
 
-  const handleChange = useCallback((index: number, value: string) => {
-    // Handle paste of full code
-    if (value.length === CODE_LENGTH && /^\d{6}$/.test(value)) {
-      const next = value.split('')
-      setDigits(next)
-      refs.current[CODE_LENGTH - 1]?.focus()
-      attemptVerify(next.join(''))
-      return
-    }
-
-    const digit = value.replace(/\D/g, '').slice(-1)
-    setDigits(prev => {
-      const next = [...prev]
-      next[index] = digit
-      return next
-    })
-    setError(null)
-    if (digit && index < CODE_LENGTH - 1) {
-      refs.current[index + 1]?.focus()
-    }
-  }, [])
-
-  const handleKeyDown = useCallback((index: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !digits[index] && index > 0) {
-      refs.current[index - 1]?.focus()
-    }
-  }, [digits])
-
-  const attemptVerify = async (code: string) => {
+  const attemptVerify = useCallback(async (code: string) => {
     if (code.length !== CODE_LENGTH || loading) return
     setLoading(true)
     setError(null)
@@ -64,14 +48,36 @@ export default function OTPScreen({ phone, onVerify, onBack, onResend }: Props) 
       refs.current[0]?.focus()
     }
     setLoading(false)
-  }
+  }, [loading, onVerify])
+
+  const handleChange = useCallback((index: number, value: string) => {
+    if (value.length === CODE_LENGTH && /^\d{6}$/.test(value)) {
+      const next = value.split('')
+      setDigits(next)
+      refs.current[CODE_LENGTH - 1]?.focus()
+      attemptVerify(next.join(''))
+      return
+    }
+    const digit = value.replace(/\D/g, '').slice(-1)
+    setDigits(prev => {
+      const next = [...prev]
+      next[index] = digit
+      return next
+    })
+    setError(null)
+    if (digit && index < CODE_LENGTH - 1) refs.current[index + 1]?.focus()
+  }, [attemptVerify])
+
+  const handleKeyDown = useCallback((index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !digits[index] && index > 0) {
+      refs.current[index - 1]?.focus()
+    }
+  }, [digits])
 
   const fullCode = digits.join('')
   useEffect(() => {
-    if (fullCode.length === CODE_LENGTH) {
-      attemptVerify(fullCode)
-    }
-  }, [fullCode])
+    if (fullCode.length === CODE_LENGTH) attemptVerify(fullCode)
+  }, [fullCode, attemptVerify])
 
   const handleResend = async () => {
     if (resendCooldown > 0) return
@@ -82,14 +88,11 @@ export default function OTPScreen({ phone, onVerify, onBack, onResend }: Props) 
     else setResendCooldown(30)
   }
 
-  const maskedPhone = phone.replace(/(\+\d{2,3})(\d+)(\d{3})/, (_, c, m, e) =>
-    `${c} ${'·'.repeat(m.length)} ${e}`
-  )
+  const isEmail = type === 'email'
 
   return (
     <div className="flex flex-col h-full bg-brand-bg">
       <div className="flex-1 flex flex-col px-8 pt-14">
-        {/* Back */}
         <button
           onClick={onBack}
           className="w-9 h-9 rounded-full bg-brand-card border border-brand-border flex items-center justify-center mb-8"
@@ -99,11 +102,23 @@ export default function OTPScreen({ phone, onVerify, onBack, onResend }: Props) 
 
         <Logo size="md" className="mb-6" />
 
-        <h2 className="text-2xl font-black text-brand-text mb-2">Código SMS</h2>
-        <p className="text-brand-muted text-sm mb-8 leading-relaxed">
+        <h2 className="text-2xl font-black text-brand-text mb-2">
+          {isEmail ? 'Código de email' : 'Código SMS'}
+        </h2>
+        <p className="text-brand-muted text-sm mb-2 leading-relaxed">
           Introduce el código de 6 dígitos que enviamos a{' '}
-          <span className="text-brand-text font-semibold font-mono">{maskedPhone}</span>
+          <span className="text-brand-text font-semibold font-mono">
+            {maskContact(contact, type)}
+          </span>
         </p>
+
+        {isEmail && (
+          <p className="text-brand-muted text-xs mb-6 leading-relaxed">
+            También puedes pulsar el enlace del email para entrar directamente.
+          </p>
+        )}
+
+        {!isEmail && <div className="mb-6" />}
 
         {/* OTP inputs */}
         <div className="flex gap-3 mb-4 justify-center">
@@ -118,6 +133,7 @@ export default function OTPScreen({ phone, onVerify, onBack, onResend }: Props) 
               onChange={e => handleChange(i, e.target.value)}
               onKeyDown={e => handleKeyDown(i, e)}
               onFocus={e => e.target.select()}
+              autoFocus={i === 0}
               className={`w-12 h-14 text-center text-xl font-black rounded-2xl border-2 outline-none transition-all bg-brand-card text-brand-text
                 ${d ? 'border-brand-blue' : 'border-brand-border'}
                 ${error ? 'border-red-500 bg-red-500/5' : ''}
@@ -132,7 +148,6 @@ export default function OTPScreen({ phone, onVerify, onBack, onResend }: Props) 
           </div>
         )}
 
-        {/* Verify button */}
         <button
           onClick={() => attemptVerify(fullCode)}
           disabled={fullCode.length !== CODE_LENGTH || loading}
@@ -150,12 +165,9 @@ export default function OTPScreen({ phone, onVerify, onBack, onResend }: Props) 
               </svg>
               Verificando...
             </span>
-          ) : (
-            'Verificar código'
-          )}
+          ) : 'Verificar código'}
         </button>
 
-        {/* Resend */}
         <div className="flex items-center justify-center gap-1.5">
           <span className="text-brand-muted text-sm">¿No lo recibiste?</span>
           <button
@@ -165,12 +177,13 @@ export default function OTPScreen({ phone, onVerify, onBack, onResend }: Props) 
               resendCooldown > 0 ? 'text-brand-muted' : 'text-brand-blue'
             }`}
           >
-            {resendCooldown > 0 ? `Reenviar en ${resendCooldown}s` : 'Reenviar SMS'}
+            {resendCooldown > 0
+              ? `Reenviar en ${resendCooldown}s`
+              : isEmail ? 'Reenviar email' : 'Reenviar SMS'}
           </button>
         </div>
       </div>
 
-      {/* Security note */}
       <div className="px-8 pb-10">
         <div className="flex items-center gap-2 justify-center">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-brand-muted">
@@ -178,7 +191,7 @@ export default function OTPScreen({ phone, onVerify, onBack, onResend }: Props) 
             <path d="M7 11V7a5 5 0 0110 0v4" />
           </svg>
           <p className="text-brand-muted text-[11px]">
-            Tu número no se comparte con terceros
+            {isEmail ? 'Tu email no se comparte con terceros' : 'Tu número no se comparte con terceros'}
           </p>
         </div>
       </div>

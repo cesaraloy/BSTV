@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { AppProvider } from './lib/context'
 import { useApp } from './lib/context'
-import { sendMagicLink, sendOTP, verifyOTP, signOut, getSession, onAuthStateChange } from './lib/auth'
+import { sendMagicLink, sendOTP, verifyOTP, verifyEmailOTP, signOut, getSession, onAuthStateChange } from './lib/auth'
 import BottomNav from './components/BottomNav'
 import HomeScreen from './pages/HomeScreen'
 import CalendarScreen from './pages/CalendarScreen'
@@ -31,6 +31,7 @@ type AuthStep =
   | { step: 'loading' }
   | { step: 'login' }
   | { step: 'otp'; phone: string }
+  | { step: 'email-otp'; email: string }
   | { step: 'app' }
 
 function AppInner() {
@@ -41,10 +42,8 @@ function AppInner() {
   const [screen, setScreen] = useState<Screen>({ type: 'tab', tab: 'home' })
   const [activeTab, setActiveTab] = useState<Tab>('home')
   const [mapMatchFilter, setMapMatchFilter] = useState<string | null>(null)
-  // Lazy-mount tabs: only render once first visited (avoids Leaflet init inside display:none)
   const [visitedTabs, setVisitedTabs] = useState<Set<Tab>>(() => new Set<Tab>(['home']))
 
-  // Restore session on mount + listen for magic link redirect
   useEffect(() => {
     if (DEMO_MODE) return
 
@@ -71,7 +70,11 @@ function AppInner() {
   }, [])
 
   // ── Auth handlers ──────────────────────────────────────────────
-  const handleSendEmail = async (email: string) => sendMagicLink(email)
+  const handleSendEmail = async (email: string) => {
+    const result = await sendMagicLink(email)
+    if (!result.error) setAuthStep({ step: 'email-otp', email })
+    return result
+  }
 
   const handleSendOTP = async (phone: string) => {
     const result = await sendOTP(phone)
@@ -82,10 +85,14 @@ function AppInner() {
   const handleVerifyOTP = async (code: string) => {
     if (authStep.step !== 'otp') return { error: 'Estado inválido' }
     const { user: authUser, error } = await verifyOTP(authStep.phone, code)
-    if (authUser) {
-      setUser(authUser)
-      setAuthStep({ step: 'app' })
-    }
+    if (authUser) { setUser(authUser); setAuthStep({ step: 'app' }) }
+    return { error }
+  }
+
+  const handleVerifyEmailOTP = async (code: string) => {
+    if (authStep.step !== 'email-otp') return { error: 'Estado inválido' }
+    const { user: authUser, error } = await verifyEmailOTP(authStep.email, code)
+    if (authUser) { setUser(authUser); setAuthStep({ step: 'app' }) }
     return { error }
   }
 
@@ -99,10 +106,8 @@ function AppInner() {
   if (authStep.step === 'loading') {
     return (
       <div className="relative w-full h-screen bg-brand-bg flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-brand-navy flex items-center justify-center animate-pulse">
-            <span className="text-3xl">⚽</span>
-          </div>
+        <div className="w-16 h-16 rounded-2xl bg-brand-navy flex items-center justify-center animate-pulse">
+          <span className="text-3xl">⚽</span>
         </div>
       </div>
     )
@@ -121,10 +126,25 @@ function AppInner() {
     return (
       <div className="relative w-full h-screen overflow-hidden bg-brand-bg">
         <OTPScreen
-          phone={authStep.phone}
+          contact={authStep.phone}
+          type="sms"
           onVerify={handleVerifyOTP}
           onBack={() => setAuthStep({ step: 'login' })}
           onResend={() => sendOTP(authStep.phone)}
+        />
+      </div>
+    )
+  }
+
+  if (authStep.step === 'email-otp') {
+    return (
+      <div className="relative w-full h-screen overflow-hidden bg-brand-bg">
+        <OTPScreen
+          contact={authStep.email}
+          type="email"
+          onVerify={handleVerifyEmailOTP}
+          onBack={() => setAuthStep({ step: 'login' })}
+          onResend={() => sendMagicLink(authStep.email)}
         />
       </div>
     )
@@ -156,13 +176,11 @@ function AppInner() {
   }
 
   const showNav = screen.type === 'tab'
-
   const isTab = screen.type === 'tab'
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-brand-bg flex flex-col">
       <div className="flex-1 overflow-hidden relative">
-        {/* Tab screens: lazy-mounted on first visit, kept alive with absolute overlay */}
         {visitedTabs.has('home') && (
           <div className={`absolute inset-0 ${isTab && screen.tab === 'home' ? '' : 'hidden'}`}>
             <HomeScreen
@@ -199,7 +217,6 @@ function AppInner() {
           </div>
         )}
 
-        {/* Stack screens: mounted on demand */}
         {screen.type === 'match-detail' && (
           <MatchDetailScreen
             match={screen.match}
