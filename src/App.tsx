@@ -144,7 +144,6 @@ function AppInner() {
         <OTPScreen
           contact={authStep.email}
           type="email"
-          codeLength={8}
           onVerify={handleVerifyEmailOTP}
           onBack={() => setAuthStep({ step: 'login' })}
           onResend={() => sendMagicLink(authStep.email)}
