@@ -121,7 +121,7 @@ export default function OTPScreen({ contact, type, codeLength = 6, onVerify, onB
         {!isEmail && <div className="mb-6" />}
 
         {/* OTP inputs */}
-        <div className="flex gap-3 mb-4 justify-center">
+        <div className={`flex mb-4 justify-center ${CODE_LENGTH > 6 ? 'gap-1.5' : 'gap-3'}`}>
           {digits.map((d, i) => (
             <input
               key={i}
@@ -134,7 +134,7 @@ export default function OTPScreen({ contact, type, codeLength = 6, onVerify, onB
               onKeyDown={e => handleKeyDown(i, e)}
               onFocus={e => e.target.select()}
               autoFocus={i === 0}
-              className={`w-12 h-14 text-center text-xl font-black rounded-2xl border-2 outline-none transition-all bg-brand-card text-brand-text
+              className={`${CODE_LENGTH > 6 ? 'w-9 h-11 text-lg' : 'w-12 h-14 text-xl'} text-center font-black rounded-xl border-2 outline-none transition-all bg-brand-card text-brand-text
                 ${d ? 'border-brand-blue' : 'border-brand-border'}
                 ${error ? 'border-red-500 bg-red-500/5' : ''}
                 focus:border-brand-blue focus:shadow-lg focus:shadow-brand-navy/20`}
