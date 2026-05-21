@@ -5,6 +5,7 @@ export interface Match {
   competition: string
   match_date: string // 'HOY' | 'MAÑANA' | 'DD/MM'
   match_time: string
+  match_datetime?: string | null // UTC ISO timestamp for push scheduling
   home_team_logo: string
   away_team_logo: string
   competition_logo: string

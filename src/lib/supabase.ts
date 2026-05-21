@@ -114,26 +114,30 @@ export async function uploadAvatar(userId: string, file: File): Promise<string |
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-export async function upsertReminder(userId: string, matchId: string, enabled: boolean) {
+export async function upsertReminder(
+  userId: string,
+  matchId: string,
+  enabled: boolean,
+  matchDatetime?: string | null,
+  advanceMinutes = 30,
+) {
   if (!supabase) { console.warn('[Reminder] supabase client is null'); return }
   if (!UUID_RE.test(matchId)) {
     console.warn('[Reminder] skipped — matchId is not a UUID (demo data):', matchId)
     return
   }
-  const reminderTime = new Date(Date.now() + 30 * 60 * 1000).toISOString()
-  console.log('[Reminder] upserting → user:', userId, 'match:', matchId, 'enabled:', enabled)
-  const { data, error } = await supabase
+  // Compute the actual UTC time to send the notification
+  const reminderTime = matchDatetime
+    ? new Date(new Date(matchDatetime).getTime() - advanceMinutes * 60_000).toISOString()
+    : null
+
+  const { error } = await supabase
     .from('reminders')
     .upsert(
-      { user_id: userId, match_id: matchId, enabled, reminder_time: reminderTime },
+      { user_id: userId, match_id: matchId, enabled, reminder_time: reminderTime, sent: false, notif_advance: advanceMinutes },
       { onConflict: 'user_id,match_id' },
     )
-    .select()
-  if (error) {
-    console.error('[Reminder] upsert FAILED:', error.code, error.message, error.details)
-  } else {
-    console.log('[Reminder] upsert OK:', data)
-  }
+  if (error) console.error('[Reminder] upsert FAILED:', error.code, error.message)
 }
 
 export async function upsertFollowedTeam(userId: string, teamId: string, enabled: boolean) {

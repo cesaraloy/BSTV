@@ -117,15 +117,15 @@ export function useAppStore() {
       console.log('user:', userRef.current?.id ?? 'NOT LOGGED IN')
       console.groupEnd()
 
+      const match = matchesRef.current.find(m => m.id === matchId)
       if (userRef.current) {
-        upsertReminder(userRef.current.id, matchId, nowEnabled)
+        upsertReminder(userRef.current.id, matchId, nowEnabled, match?.match_datetime ?? null, notifAdvanceRef.current)
       }
 
       if (nowEnabled) {
         requestPermission().then(async permission => {
           if (permission !== 'granted') return
           if (userRef.current) await subscribeToPush(userRef.current.id)
-          const match = matchesRef.current.find(m => m.id === matchId)
           if (match) scheduleLocalNotification(matchId, match.home_team, match.away_team, match.match_time, match.match_date, notifAdvanceRef.current)
         })
       }
