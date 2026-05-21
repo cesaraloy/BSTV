@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import Logo from '../components/Logo'
-import { Mail, Phone } from 'lucide-react'
+import { Mail, Phone, Smartphone } from 'lucide-react'
 
 type Method = 'email' | 'phone'
 
@@ -17,8 +17,15 @@ const COUNTRIES = [
   { code: 'US', flag: '🇺🇸', dial: '+1' },
 ]
 
+// Detect if running as installed PWA (home screen)
+const isStandalone =
+  (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
+  window.matchMedia('(display-mode: standalone)').matches
+
 export default function LoginScreen({ onSendEmail, onSendOTP }: Props) {
-  const [method, setMethod] = useState<Method>('email')
+  // In standalone (home screen) mode, default to phone OTP since magic links
+  // open in Safari (separate storage) and can't authenticate the PWA directly.
+  const [method, setMethod] = useState<Method>(isStandalone ? 'phone' : 'email')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [country, setCountry] = useState(COUNTRIES[0])
@@ -28,23 +35,17 @@ export default function LoginScreen({ onSendEmail, onSendOTP }: Props) {
 
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   const isValidPhone = phone.replace(/\D/g, '').length >= 9
-
   const canSubmit = method === 'email' ? isValidEmail : isValidPhone
 
   const handleSubmit = async () => {
     if (!canSubmit || loading) return
     setLoading(true)
     setError(null)
-
     const result = method === 'email'
       ? await onSendEmail(email)
       : await onSendOTP(`${country.dial}${phone.replace(/\D/g, '')}`)
-
-    if (result.error) {
-      setError(result.error)
-    } else {
-      setSent(true)
-    }
+    if (result.error) setError(result.error)
+    else setSent(true)
     setLoading(false)
   }
 
@@ -63,6 +64,16 @@ export default function LoginScreen({ onSendEmail, onSendOTP }: Props) {
           </p>
         </div>
 
+        {/* Banner for standalone mode */}
+        {isStandalone && (
+          <div className="w-full flex items-start gap-2.5 bg-brand-blue/10 border border-brand-blue/30 rounded-2xl px-4 py-3 mb-4">
+            <Smartphone size={16} className="text-brand-blue shrink-0 mt-0.5" />
+            <p className="text-xs text-brand-blue leading-relaxed">
+              Usa tu número de teléfono para iniciar sesión directamente en la app.
+            </p>
+          </div>
+        )}
+
         {/* Card */}
         {!sent ? (
           <div className="w-full bg-brand-card border border-brand-border rounded-3xl p-6">
@@ -70,19 +81,17 @@ export default function LoginScreen({ onSendEmail, onSendOTP }: Props) {
 
             {/* Method toggle */}
             <div className="flex bg-brand-accent border border-brand-border rounded-xl p-1 mb-5">
-              {(['email', 'phone'] as Method[]).map(m => (
+              {(['phone', 'email'] as Method[]).map(m => (
                 <button
                   key={m}
                   onClick={() => { setMethod(m); setError(null); setSent(false) }}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
-                    method === m
-                      ? 'bg-brand-navy text-white shadow'
-                      : 'text-brand-muted'
+                    method === m ? 'bg-brand-navy text-white shadow' : 'text-brand-muted'
                   }`}
                 >
-                  {m === 'email'
-                    ? <><Mail size={13} /> Email</>
-                    : <><Phone size={13} /> SMS <span className="text-[9px] opacity-60 ml-0.5">(próximamente)</span></>
+                  {m === 'phone'
+                    ? <><Phone size={13} /> SMS</>
+                    : <><Mail size={13} /> Email</>
                   }
                 </button>
               ))}
@@ -90,6 +99,13 @@ export default function LoginScreen({ onSendEmail, onSendOTP }: Props) {
 
             {method === 'email' ? (
               <>
+                {isStandalone && (
+                  <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/30 rounded-xl px-3 py-2.5 mb-4">
+                    <span className="text-amber-400 text-xs leading-relaxed">
+                      ⚠️ El enlace del email se abrirá en Safari y no autenticará la app guardada. Usa SMS para una experiencia completa.
+                    </span>
+                  </div>
+                )}
                 <p className="text-brand-muted text-xs mb-4">
                   Te enviaremos un enlace mágico a tu email. Sin contraseña.
                 </p>
@@ -154,20 +170,29 @@ export default function LoginScreen({ onSendEmail, onSendOTP }: Props) {
             </button>
           </div>
         ) : (
-          /* Sent confirmation */
           <div className="w-full bg-brand-card border border-brand-border rounded-3xl p-8 flex flex-col items-center text-center">
             <div className="w-16 h-16 rounded-full bg-brand-navy/20 border border-brand-blue/30 flex items-center justify-center mb-4">
-              <Mail size={28} className="text-brand-blue" />
+              {method === 'email' ? <Mail size={28} className="text-brand-blue" /> : <Phone size={28} className="text-brand-blue" />}
             </div>
             <p className="text-brand-text font-bold text-lg mb-2">
               {method === 'email' ? '¡Revisa tu email!' : '¡Código enviado!'}
             </p>
-            <p className="text-brand-muted text-sm leading-relaxed mb-6">
+            <p className="text-brand-muted text-sm leading-relaxed mb-4">
               {method === 'email'
-                ? <>Hemos enviado un enlace a <span className="text-brand-text font-mono font-semibold">{email}</span>. Pulsa el enlace para entrar.</>
+                ? <>Hemos enviado un enlace a <span className="text-brand-text font-mono font-semibold">{email}</span>.</>
                 : <>Hemos enviado un código a <span className="text-brand-text font-mono font-semibold">{country.dial} {phone}</span>.</>
               }
             </p>
+
+            {/* Standalone + email: extra guidance */}
+            {isStandalone && method === 'email' && (
+              <div className="w-full bg-amber-500/10 border border-amber-500/30 rounded-xl px-3 py-3 mb-4 text-left">
+                <p className="text-amber-400 text-xs leading-relaxed">
+                  El enlace se abrirá en Safari, no en esta app. Una vez autenticado en Safari, vuelve aquí e inicia sesión con tu número de teléfono.
+                </p>
+              </div>
+            )}
+
             <button
               onClick={() => setSent(false)}
               className="text-sm text-brand-blue font-semibold"
@@ -178,7 +203,6 @@ export default function LoginScreen({ onSendEmail, onSendOTP }: Props) {
         )}
       </div>
 
-      {/* Footer */}
       <div className="px-8 pb-10 text-center">
         <p className="text-brand-muted text-[11px] leading-relaxed">
           Al continuar aceptas nuestros{' '}
