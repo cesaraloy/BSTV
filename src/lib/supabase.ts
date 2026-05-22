@@ -15,7 +15,7 @@ export async function fetchMatches(): Promise<Match[] | null> {
   const { data, error } = await supabase
     .from('matches')
     .select('*')
-    .order('match_date', { ascending: true })
+    .order('match_datetime', { ascending: true, nullsFirst: false })
   if (error) { console.error('fetchMatches:', error.message); return null }
   return data as Match[]
 }
