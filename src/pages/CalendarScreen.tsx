@@ -1,23 +1,23 @@
 import { useState, useRef } from 'react'
 import { SlidersHorizontal } from 'lucide-react'
 import MatchCard from '../components/MatchCard'
-import Logo from '../components/Logo'
 import { useApp } from '../lib/context'
 import type { Match } from '../types'
 
 const PTR_THRESHOLD = 64
 
-const FILTERS = ['Todos', 'Mis equipos', 'Hoy', 'Mañana', 'LaLiga', 'Hypermotion', 'Premier', 'Champions', 'Europa', "Women's", 'MotoGP', 'F1']
+const FILTERS = ['Todos', 'Mis equipos', 'Hoy', 'Mañana', 'LaLiga', 'Premier', 'Champions', 'Europa', 'Bundesliga', 'Serie A', 'Ligue 1', 'Mundial', 'Eurocopa']
 
 const FILTER_MAP: Record<string, string> = {
   'LaLiga':     'LaLiga',
-  'Hypermotion': 'LaLiga Hypermotion',
   'Premier':    'Premier League',
   'Champions':  'Champions League',
   'Europa':     'Europa League',
-  "Women's":    "Women's Champions League",
-  'MotoGP':     'MotoGP',
-  'F1':         'Formula 1',
+  'Bundesliga': 'Bundesliga',
+  'Serie A':    'Serie A',
+  'Ligue 1':    'Ligue 1',
+  'Mundial':    'Mundial',
+  'Eurocopa':   'Eurocopa',
 }
 
 interface Props {
@@ -72,7 +72,7 @@ export default function CalendarScreen({ onMatchClick }: Props) {
       {/* Header */}
       <div className="pt-14 px-5 pb-3 bg-brand-bg">
         <div className="flex items-center justify-between mb-4">
-          <Logo size="md" />
+          <h1 className="text-xl font-bold text-brand-text tracking-tight leading-6">Partidos</h1>
           <button className="w-9 h-9 rounded-full bg-brand-card border border-brand-border flex items-center justify-center">
             <SlidersHorizontal size={17} className="text-brand-text" />
           </button>

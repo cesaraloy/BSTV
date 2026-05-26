@@ -27,11 +27,6 @@ const COMPETITIONS = [
   { code: 'FL1', name: 'Ligue 1',            emoji: '🇫🇷' },
   // ── Portugal ──────────────────────────────────────────────────────
   { code: 'PPL', name: 'Primeira Liga',      emoji: '🇵🇹' },
-  // ── Países Bajos ──────────────────────────────────────────────────
-  { code: 'DED', name: 'Eredivisie',         emoji: '🇳🇱' },
-  // ── Sudamérica ────────────────────────────────────────────────────
-  { code: 'CLI', name: 'Copa Libertadores',  emoji: '🌎' },
-  { code: 'BSA', name: 'Brasileirão',        emoji: '🇧🇷' },
   // ── Internacional ─────────────────────────────────────────────────
   { code: 'WC',  name: 'Mundial',            emoji: '🌍' },
 ]
@@ -168,24 +163,6 @@ const TEAM_NAME_MAP: Record<string, string> = {
   'Rio Ave FC':                   'Rio Ave',
   'FC Famalicão':                 'Famalicão',
   'CF Os Belenenses':             'Belenenses',
-  // ── Eredivisie ────────────────────────────────────────────────────
-  'AFC Ajax':                     'Ajax',
-  'PSV Eindhoven':                'PSV',
-  'Feyenoord Rotterdam':          'Feyenoord',
-  'AZ Alkmaar':                   'AZ Alkmaar',
-  'FC Utrecht':                   'FC Utrecht',
-  'SC Heerenveen':                'SC Heerenveen',
-  'NEC Nijmegen':                 'NEC Nijmegen',
-  'FC Groningen':                 'FC Groningen',
-  'Sparta Rotterdam':             'Sparta Rotterdam',
-  'FC Twente':                    'FC Twente',
-  'Go Ahead Eagles':              'Go Ahead Eagles',
-  'Almere City FC':               'Almere City',
-  'PEC Zwolle':                   'PEC Zwolle',
-  'RKC Waalwijk':                 'RKC Waalwijk',
-  'Heracles Almelo':              'Heracles',
-  'NAC Breda':                    'NAC Breda',
-  'Willem II':                    'Willem II',
   // ── Champions / Europa League extras ──────────────────────────────
   'Borussia Mönchengladbach':     "Borussia M'gladbach",
   'Fenerbahçe SK':                'Fenerbahçe',

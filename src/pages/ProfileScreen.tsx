@@ -48,7 +48,7 @@ export default function ProfileScreen({ onTeamsClick, onFAQClick, onAvatarClick,
       {/* Header */}
       <div className="pt-14 px-5 pb-4 bg-brand-bg">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-brand-text tracking-tight">Perfil</h1>
+          <h1 className="text-xl font-bold text-brand-text tracking-tight leading-6">Mi perfil</h1>
           {editing ? (
             <div className="flex items-center gap-2">
               <button onClick={() => setEditing(false)} className="w-9 h-9 rounded-full bg-brand-card border border-brand-border flex items-center justify-center">

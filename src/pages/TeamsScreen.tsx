@@ -9,20 +9,22 @@ const COMP_ORDER = [
   'Premier League',
   'Champions League',
   'Europa League',
-  "Women's Champions League",
-  'MotoGP',
-  'Formula 1',
+  'Bundesliga',
+  'Serie A',
+  'Ligue 1',
+  'Primeira Liga',
 ]
 
 const CHIP_LABELS: Record<string, string> = {
-  'LaLiga': 'LaLiga',
+  'LaLiga':             'LaLiga',
   'LaLiga Hypermotion': 'Hypermotion',
-  'Premier League': 'Premier',
-  'Champions League': 'Champions',
-  'Europa League': 'Europa',
-  "Women's Champions League": "Women's",
-  'MotoGP': 'MotoGP',
-  'Formula 1': 'F1',
+  'Premier League':     'Premier',
+  'Champions League':   'Champions',
+  'Europa League':      'Europa',
+  'Bundesliga':         'Bundesliga',
+  'Serie A':            'Serie A',
+  'Ligue 1':            'Ligue 1',
+  'Primeira Liga':      'Portugal',
 }
 
 interface Props {
@@ -69,7 +71,7 @@ export default function TeamsScreen({ onBack }: Props) {
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
           <input
             type="text"
-            placeholder="Buscar equipo o piloto..."
+            placeholder="Buscar equipo..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full bg-brand-card border border-brand-border rounded-xl pl-9 pr-4 py-2.5 text-sm text-brand-text placeholder-brand-muted outline-none focus:border-brand-blue transition-colors"

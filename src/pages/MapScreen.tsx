@@ -5,14 +5,15 @@ import VenueCard from '../components/VenueCard'
 import { useApp } from '../lib/context'
 import type { Venue } from '../types'
 
-const FILTERS = ['Todos', 'Abiertos', 'Champions', 'Hypermotion', 'Europa', 'F1', 'MotoGP']
+const FILTERS = ['Todos', 'Abiertos', 'LaLiga', 'Premier', 'Champions', 'Europa', 'Bundesliga', 'Serie A']
 
 const COMPETITION_MAP: Record<string, string> = {
+  'LaLiga':     'LaLiga',
+  'Premier':    'Premier League',
   'Champions':  'Champions League',
-  'Hypermotion': 'LaLiga Hypermotion',
   'Europa':     'Europa League',
-  'F1':         'Formula 1',
-  'MotoGP':     'MotoGP',
+  'Bundesliga': 'Bundesliga',
+  'Serie A':    'Serie A',
 }
 
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -154,7 +155,7 @@ export default function MapScreen({ onVenueClick, matchFilter }: Props) {
         ) : (
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h1 className="text-xl font-bold text-brand-text tracking-tight">Bares</h1>
+              <h1 className="text-xl font-bold text-brand-text tracking-tight leading-6">Mapa de bares</h1>
               {matchFilterLabel && (
                 <p className="text-xs text-brand-blue font-medium mt-0.5">
                   {matchFilterLabel.home_team} vs {matchFilterLabel.away_team}
