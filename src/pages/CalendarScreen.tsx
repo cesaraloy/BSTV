@@ -6,18 +6,22 @@ import type { Match } from '../types'
 
 const PTR_THRESHOLD = 64
 
-const FILTERS = ['Todos', 'Mis equipos', 'Hoy', 'Mañana', 'LaLiga', 'Premier', 'Champions', 'Europa', 'Bundesliga', 'Serie A', 'Ligue 1', 'Mundial', 'Eurocopa']
+const FILTERS = ['Todos', 'Mis equipos', 'Hoy', 'Mañana', 'LaLiga', 'Hypermotion', 'Premier', 'Champions', 'Europa', 'Bundesliga', 'Serie A', 'Ligue 1', "Women's", 'MotoGP', 'F1', 'Mundial', 'Eurocopa']
 
 const FILTER_MAP: Record<string, string> = {
-  'LaLiga':     'LaLiga',
-  'Premier':    'Premier League',
-  'Champions':  'Champions League',
-  'Europa':     'Europa League',
-  'Bundesliga': 'Bundesliga',
-  'Serie A':    'Serie A',
-  'Ligue 1':    'Ligue 1',
-  'Mundial':    'Mundial',
-  'Eurocopa':   'Eurocopa',
+  'LaLiga':      'LaLiga',
+  'Hypermotion': 'LaLiga Hypermotion',
+  'Premier':     'Premier League',
+  'Champions':   'Champions League',
+  'Europa':      'Europa League',
+  'Bundesliga':  'Bundesliga',
+  'Serie A':     'Serie A',
+  'Ligue 1':     'Ligue 1',
+  "Women's":     "Women's Champions League",
+  'MotoGP':      'MotoGP',
+  'F1':          'Formula 1',
+  'Mundial':     'Mundial',
+  'Eurocopa':    'Eurocopa',
 }
 
 interface Props {

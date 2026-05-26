@@ -5,15 +5,18 @@ import VenueCard from '../components/VenueCard'
 import { useApp } from '../lib/context'
 import type { Venue } from '../types'
 
-const FILTERS = ['Todos', 'Abiertos', 'LaLiga', 'Premier', 'Champions', 'Europa', 'Bundesliga', 'Serie A']
+const FILTERS = ['Todos', 'Abiertos', 'LaLiga', 'Hypermotion', 'Premier', 'Champions', 'Europa', 'Bundesliga', 'Serie A', 'F1', 'MotoGP']
 
 const COMPETITION_MAP: Record<string, string> = {
-  'LaLiga':     'LaLiga',
-  'Premier':    'Premier League',
-  'Champions':  'Champions League',
-  'Europa':     'Europa League',
-  'Bundesliga': 'Bundesliga',
-  'Serie A':    'Serie A',
+  'LaLiga':      'LaLiga',
+  'Hypermotion': 'LaLiga Hypermotion',
+  'Premier':     'Premier League',
+  'Champions':   'Champions League',
+  'Europa':      'Europa League',
+  'Bundesliga':  'Bundesliga',
+  'Serie A':     'Serie A',
+  'F1':          'Formula 1',
+  'MotoGP':      'MotoGP',
 }
 
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {

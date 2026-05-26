@@ -13,18 +13,24 @@ const COMP_ORDER = [
   'Serie A',
   'Ligue 1',
   'Primeira Liga',
+  "Women's Champions League",
+  'MotoGP',
+  'Formula 1',
 ]
 
 const CHIP_LABELS: Record<string, string> = {
-  'LaLiga':             'LaLiga',
-  'LaLiga Hypermotion': 'Hypermotion',
-  'Premier League':     'Premier',
-  'Champions League':   'Champions',
-  'Europa League':      'Europa',
-  'Bundesliga':         'Bundesliga',
-  'Serie A':            'Serie A',
-  'Ligue 1':            'Ligue 1',
-  'Primeira Liga':      'Portugal',
+  'LaLiga':                   'LaLiga',
+  'LaLiga Hypermotion':       'Hypermotion',
+  'Premier League':           'Premier',
+  'Champions League':         'Champions',
+  'Europa League':            'Europa',
+  'Bundesliga':               'Bundesliga',
+  'Serie A':                  'Serie A',
+  'Ligue 1':                  'Ligue 1',
+  'Primeira Liga':            'Portugal',
+  "Women's Champions League": "Women's",
+  'MotoGP':                   'MotoGP',
+  'Formula 1':                'F1',
 }
 
 interface Props {
