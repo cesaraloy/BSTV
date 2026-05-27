@@ -238,7 +238,7 @@ export default function MapScreen({ onVenueClick, matchFilter }: Props) {
           )}
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto px-5 pb-28">
+        <div className="flex-1 overflow-y-auto bg-brand-bg px-5 pb-28">
           <p className="text-xs font-bold text-brand-muted uppercase tracking-widest mt-4 mb-3">
             {filtered.length} {filtered.length === 1 ? 'local' : 'locales'}
             {searchText ? ` para "${searchText}"` : ''}
