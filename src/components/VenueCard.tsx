@@ -1,5 +1,6 @@
 import { ChevronRight, Star, MapPin } from 'lucide-react'
 import type { Venue } from '../types'
+import { getVenueStatus } from '../lib/schedule'
 
 interface Props {
   venue: Venue
@@ -8,6 +9,20 @@ interface Props {
 }
 
 export default function VenueCard({ venue, onClick, compact }: Props) {
+  const status = venue.schedule
+    ? getVenueStatus(venue.schedule)
+    : { is_open: venue.is_open, open_until: venue.open_until, opens_at: null }
+
+  const statusLabel = status.is_open
+    ? `Abierto hasta ${status.open_until}`
+    : status.opens_at
+      ? `Abre a las ${status.opens_at}`
+      : 'Cerrado'
+
+  const statusColor = status.is_open
+    ? 'text-brand-blue'
+    : status.opens_at ? 'text-yellow-400' : 'text-red-400'
+
   return (
     <div
       onClick={onClick}
@@ -33,8 +48,8 @@ export default function VenueCard({ venue, onClick, compact }: Props) {
         )}
 
         <div className="flex items-center gap-2">
-          <span className={`text-[10px] font-semibold ${venue.is_open ? 'text-brand-blue' : 'text-red-400'}`}>
-            {venue.is_open ? `Abierto hasta ${venue.open_until}` : 'Cerrado'}
+          <span className={`text-[10px] font-semibold ${statusColor}`}>
+            {statusLabel}
           </span>
           <span className="text-brand-border">·</span>
           <div className="flex items-center gap-1">

@@ -1,3 +1,6 @@
+import type { TimeSlot, Schedule } from '../lib/schedule'
+export type { TimeSlot, Schedule }
+
 export interface Match {
   id: string
   home_team: string
@@ -29,6 +32,7 @@ export interface Venue {
   competitions: string[]
   verified: boolean
   distance?: string
+  schedule?: Schedule | null
 }
 
 export interface Team {

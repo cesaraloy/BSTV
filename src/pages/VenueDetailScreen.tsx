@@ -1,5 +1,6 @@
-import { ArrowLeft, MapPin, Phone, Star, ExternalLink, ChevronRight } from 'lucide-react'
+import { ArrowLeft, MapPin, Phone, Star, ExternalLink, ChevronRight, Clock } from 'lucide-react'
 import { useApp } from '../lib/context'
+import { getVenueStatus, formatSlots, DISPLAY_ORDER, DAY_LABELS } from '../lib/schedule'
 import type { Venue, Match } from '../types'
 
 interface Props {
@@ -12,8 +13,19 @@ export default function VenueDetailScreen({ venue, onBack, onMatchClick }: Props
   const { matches, reminders, venueMatches } = useApp()
 
   const relatedMatchIds = venueMatches[venue.id] ?? []
-
   const relatedMatches = matches.filter(m => relatedMatchIds.includes(m.id))
+
+  const status = venue.schedule
+    ? getVenueStatus(venue.schedule)
+    : { is_open: venue.is_open, open_until: venue.open_until, opens_at: null }
+
+  const statusLabel = status.is_open
+    ? `Abierto hasta ${status.open_until}`
+    : status.opens_at
+      ? `Abre a las ${status.opens_at}`
+      : 'Cerrado'
+
+  const today = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][new Date().getDay()]
 
   return (
     <div className="flex flex-col h-full overflow-y-auto pb-6">
@@ -27,9 +39,13 @@ export default function VenueDetailScreen({ venue, onBack, onMatchClick }: Props
           <ArrowLeft size={18} className="text-white" />
         </button>
         <div className={`absolute bottom-4 right-4 px-3 py-1.5 rounded-full text-xs font-bold ${
-          venue.is_open ? 'bg-brand-navy text-white border border-brand-blue' : 'bg-red-500/90 text-white'
+          status.is_open
+            ? 'bg-brand-navy text-white border border-brand-blue'
+            : status.opens_at
+              ? 'bg-yellow-500/90 text-white'
+              : 'bg-red-500/90 text-white'
         }`}>
-          {venue.is_open ? `Abierto hasta ${venue.open_until}` : 'Cerrado'}
+          {statusLabel}
         </div>
       </div>
 
@@ -71,6 +87,40 @@ export default function VenueDetailScreen({ venue, onBack, onMatchClick }: Props
           </div>
         </div>
       </div>
+
+      {/* Schedule */}
+      {venue.schedule && (
+        <div className="px-5 mt-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Clock size={13} className="text-brand-muted" />
+            <p className="text-xs font-bold text-brand-muted uppercase tracking-widest">Horario</p>
+          </div>
+          <div className="bg-brand-card border border-brand-border rounded-2xl overflow-hidden">
+            {DISPLAY_ORDER.map((key, i) => {
+              const isToday = key === today
+              const slots = venue.schedule![key]
+              return (
+                <div
+                  key={key}
+                  className={`flex items-center justify-between px-4 py-3 ${
+                    isToday ? 'bg-brand-navy/10' : ''
+                  } ${i < DISPLAY_ORDER.length - 1 ? 'border-b border-brand-border' : ''}`}
+                >
+                  <span className={`text-sm font-semibold w-28 ${isToday ? 'text-brand-blue' : 'text-brand-text'}`}>
+                    {DAY_LABELS[key]}
+                    {isToday && <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wide text-brand-blue">hoy</span>}
+                  </span>
+                  <span className={`text-sm text-right ${
+                    !slots || slots.length === 0 ? 'text-brand-muted' : isToday ? 'text-brand-blue font-medium' : 'text-brand-text'
+                  }`}>
+                    {formatSlots(slots)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Upcoming matches */}
       <div className="px-5 mt-5">
